@@ -1,6 +1,11 @@
 #pragma once
-#include <vector>
+
+#ifndef ESM_EXAMMANAGER_HPP
+#define ESM_EXAMMANAGER_HPP
+
+#include <map>
 #include <string>
+#include <stdexcept>
 #include "Student.hpp"
 
 namespace esm
@@ -8,26 +13,20 @@ namespace esm
 	class ExamManager
 	{
 	public:
-		static ExamManager& getInstance()
-		{
-			static ExamManager instance;
-			return instance;
-		}
+		static ExamManager& getInstance();
 
-		void newExam(const std::string title)
-		{
-			auto exam = ExamModel();
-			exam.id = exams.size();
-			exam.title = title;
-		}
+		ExamModel& newExam(const int id, const std::string title);
+
+		int nextAvailableId() noexcept;
 
 	private:
-		std::vector<ExamManager> exams;
+		std::map<int, ExamModel> exams;
 
 		ExamManager() = default;
 		~ExamManager() = default;
 
 		ExamManager(const ExamManager& other) = delete;
 		const ExamManager& operator=(const ExamManager& other) = delete;
-	}
+	};
 }
+#endif // !EXAMMANAGER_HPP

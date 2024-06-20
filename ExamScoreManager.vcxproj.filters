@@ -27,6 +27,21 @@
     <ClCompile Include="StudentManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="SubjectManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ConsoleUtils.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Breadcrumb.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ExamManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Navigator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Command.hpp">
@@ -39,6 +54,24 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="ExamManager.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Commands.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleUtils.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="StudentManager.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SubjectManager.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Navigator.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

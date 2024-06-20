@@ -1,45 +1,53 @@
+#pragma once
+#include "StudentManager.hpp"
+
 #include <vector>
+#include <memory>
 #include "Student.hpp"
-#include <algorithm>
 
 namespace esm
 {
-	class StudentManager
+	StudentManager& StudentManager::getInstance() noexcept
 	{
-	public:
-		static StudentManager& getInstance()
-		{
-			static StudentManager instance;
-			return instance;
-		}
+		static StudentManager instance;
+		return instance;
+	}
 
-		void addStudent(const StudentInfo& student)
-		{
-			students.push_back(student);
-		}
+	void StudentManager::addStudent(const StudentInfo& student)
+	{
+		students.push_back(std::make_shared<StudentInfo>(student));
+	}
 
-		std::vector<StudentInfo>& getStudents() noexcept
-		{
-			return students;
-		}
+	std::vector<std::shared_ptr<StudentInfo>>& StudentManager::getStudents() noexcept
+	{
+		return students;
+	}
 
-		std::vector<StudentInfo>::const_iterator begin() const noexcept
-		{
-			return students.begin();
-		}
+	int StudentManager::addClass(const std::string& className)
+	{
+		return addClass(std::string(className));
+	}
 
-		std::vector<StudentInfo>::const_iterator end() const noexcept
-		{
-			return students.end();
-		}
+	int StudentManager::addClass(std::string&& className)
+	{
+		if (className.empty())
+			return -1;
 
-	private:
-		std::vector<StudentInfo> students;
+		int id = getClassId(className);
+		if (id != -1)
+			return id;
 
-		StudentManager() = default;
-		~StudentManager() = default;
+		classes.push_back(std::move(className));
+		return classes.size() - 1;
+	}
 
-		StudentManager(const StudentManager& other) = delete;
-		const StudentManager& operator=(const StudentManager& other) = delete;
-	};
+	int StudentManager::getClassId(const std::string& className)
+	{
+		return (find(classes.begin(), classes.end(), className) - classes.begin() + 1) % (classes.size() + 1) - 1;
+	}
+
+	std::vector<std::string>& StudentManager::getClasses() noexcept
+	{
+		return classes;
+	}
 }

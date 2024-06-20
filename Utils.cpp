@@ -1,16 +1,28 @@
-#pragma once
-
+#include "Utils.hpp"
+#include "Breadcrumb.hpp"
+#include "Command.hpp"
+#include "ConsoleUtils.hpp"
+#include "Navigator.hpp"
 #include <iostream>
 #include <list>
-#include "Breadcrumb.hpp"
+#include <conio.h>
 
 namespace esm
 {
-	static std::list<Breadcrumb> navigator;
+	void waitEnterPressed()
+	{
+		while (_getch() != 13);
+	}
 
-	static void printNavigator()
+	void waitAnyKeyPressed()
+	{
+		int _ = _getch();
+	}
+
+	void printNavigator()
 	{
 		std::cout << "当前位置：";
+		auto& navigator = Navigator::getInstance().getAll();
 		auto iter = navigator.begin();
 		while (iter != navigator.end())
 		{
@@ -23,42 +35,119 @@ namespace esm
 		std::cout << std::endl;
 	}
 
-	static void printCommands(const Breadcrumb& breadcrumb)
+	void printCommands(Breadcrumb& breadcrumb)
 	{
-		std::cout << "================" << '\n';
-		auto iter = breadcrumb.getCommands().begin();
-		std::cout << "可用命令：" << '\n';
-		int id = 1;
-		while (iter != breadcrumb.getCommands().end())
-		{
-			auto& pCmd = *iter;
-			std::cout << id << ". " << pCmd->title << '\n';
-			++iter;
-			++id;
-		}
-		std::cout << "================" << '\n';
-	}
+		if (breadcrumb.getCommands().size() == 0)
+			throw std::runtime_error("No commands available.");
 
-	static void askAndInvokeCommands(const Breadcrumb& breadcrumb)
-	{
-		int id;
-		while (true)
+		if (breadcrumb.selecting < 0 || breadcrumb.selecting >= breadcrumb.getCommands().size())
+			breadcrumb.selecting = 0;
+		int x, y;
+		con::getCursorPosition(x, y);
+		con::hideCursor();
+		bool confirm = false;
+		while (!confirm)
 		{
-			std::cout << "请输入命令编号：";
-			std::cin >> id;
-			if (id < 1 || id > breadcrumb.getCommands().size())
+			std::cout << con::lineClear << "================\n";
+			auto iter = breadcrumb.getCommands().begin();
+			int id = 0;
+			while (iter != breadcrumb.getCommands().end())
 			{
-				std::cout << "无效的命令编号，请重新输入" << std::endl;
-				continue;
+				auto& pCmd = *iter;
+				std::cout << con::lineClear;
+				if (id == breadcrumb.selecting)
+					std::cout << con::textGreen << pCmd->title << con::textColorDefault;
+				else
+					std::cout << pCmd->title;
+				std::cout << '\n';
+				++iter;
+				++id;
 			}
+			std::cout << con::lineClear << "================\n";
+			std::cout << con::lineClear << "通过↑↓方向键选择命令，回车键执行当前选中命令（绿色）" << std::endl;
 
-			auto& pCmd = breadcrumb.getCommands()[id - 1];
-			pCmd->Invoke();
-			break;
+			while (1)
+			{
+				int key = _getch();
+				if (key == 13)
+				{
+					confirm = true;
+					break;
+				}
+				if (key != 224)
+					continue;
+				key = _getch();
+				if (key == 72)
+				{
+					breadcrumb.selecting = (breadcrumb.selecting - 1 + breadcrumb.getCommands().size()) % breadcrumb.getCommands().size();
+					break;
+				}
+				else if (key == 80)
+				{
+					breadcrumb.selecting = (breadcrumb.selecting + 1) % breadcrumb.getCommands().size();
+					break;
+				}
+			}
+			if (!confirm)
+				con::setCursorPosition(x, y);
 		}
+
+		con::showCursor();
+		breadcrumb.getCommands()[breadcrumb.selecting]->Invoke();
 	}
 
-	static void clearConsole()
+	int selectOption(const std::vector<std::string>& options, int selecting)
+	{
+		std::cout << con::cha(1) << std::flush;
+		int x, y;
+		con::getCursorPosition(x, y);
+		con::hideCursor();
+		bool confirm = false;
+		while (!confirm)
+		{
+			for (int i = 0; i < options.size(); i++)
+			{
+				std::cout << con::lineClear;
+				if (i == selecting)
+					std::cout << con::textGreen << options[i] << con::textColorDefault;
+				else
+					std::cout << options[i];
+				std::cout << '\n';
+			}
+			con::setCursorPosition(x, y);
+
+			while (1)
+			{
+				int key = _getch();
+				if (key == 13)
+				{
+					confirm = true;
+					break;
+				}
+				if (key != 224)
+					continue;
+				key = _getch();
+				if (key == 72)
+				{
+					selecting = (selecting - 1 + options.size()) % options.size();
+					break;
+				}
+				else if (key == 80)
+				{
+					selecting = (selecting + 1) % options.size();
+					break;
+				}
+			}
+		}
+
+		for (int i = 0; i < options.size(); i++)
+			std::cout << con::lineClear << '\n';
+		con::setCursorPosition(x, y);
+		con::showCursor();
+		return selecting;
+	}
+
+	void clearConsole()
 	{
 		system("cls");
 	}
