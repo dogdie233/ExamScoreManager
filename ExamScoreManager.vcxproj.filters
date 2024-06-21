@@ -42,6 +42,12 @@
     <ClCompile Include="Navigator.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="CsvHelper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="PersistentData.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Command.hpp">
@@ -72,6 +78,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Navigator.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CsvHelper.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PersistentData.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

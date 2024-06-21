@@ -6,6 +6,7 @@
 #include <iostream>
 #include <list>
 #include <conio.h>
+#include <algorithm>
 
 namespace esm
 {
@@ -150,5 +151,55 @@ namespace esm
 	void clearConsole()
 	{
 		system("cls");
+	}
+
+	int stringCount(const std::string& str, const std::string& pattern)
+	{
+		int count = 0;
+		size_t pos = 0;
+		while ((pos = str.find(pattern, pos)) != std::string::npos)
+		{
+			++count;
+			pos += pattern.length();
+		}
+		return count;
+	}
+
+	int dummyStrLenCalc(const std::string& str)
+	{
+		int len = str.size() - stringCount(str, "¡¤");
+		return len;
+	}
+	
+	bool CreateCsvWriterSafe(const PersistentData& persistentData, csv::CsvWriter& writer)
+	{
+		csv::CsvWriter newWriter(nullptr);
+		try
+		{
+			newWriter = persistentData.CreateWriter();
+			writer = newWriter;
+			return true;
+		}
+		catch (const std::exception& e)
+		{
+			std::cerr << "Error when opening subject save data: " << e.what() << std::endl;
+			return false;
+		}
+	}
+
+	bool CreateCsvReaderSafe(const PersistentData& persistentData, csv::CsvReader& reader)
+	{
+		csv::CsvReader newReader(nullptr);
+		try
+		{
+			newReader = persistentData.CreateReader();
+			reader = newReader;
+			return true;
+		}
+		catch (const std::exception& e)
+		{
+			std::cerr << "Error when opening save data: " << e.what() << std::endl;
+			return false;
+		}
 	}
 }

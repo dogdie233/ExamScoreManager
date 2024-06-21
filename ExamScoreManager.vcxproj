@@ -131,9 +131,11 @@
     <ClCompile Include="Breadcrumb.cpp" />
     <ClCompile Include="Commands.cpp" />
     <ClCompile Include="ConsoleUtils.cpp" />
+    <ClCompile Include="CsvHelper.cpp" />
     <ClCompile Include="ExamManager.cpp" />
     <ClCompile Include="ExamScoreManager.cpp" />
     <ClCompile Include="Navigator.cpp" />
+    <ClCompile Include="PersistentData.cpp" />
     <ClCompile Include="StudentManager.cpp" />
     <ClCompile Include="SubjectManager.cpp" />
     <ClCompile Include="Utils.cpp" />
@@ -145,6 +147,8 @@
     <ClInclude Include="ConsoleUtils.hpp" />
     <ClInclude Include="ExamManager.hpp" />
     <ClInclude Include="Navigator.hpp" />
+    <ClInclude Include="CsvHelper.hpp" />
+    <ClInclude Include="PersistentData.hpp" />
     <ClInclude Include="Student.hpp" />
     <ClInclude Include="StudentManager.hpp" />
     <ClInclude Include="SubjectManager.hpp" />

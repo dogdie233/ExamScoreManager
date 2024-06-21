@@ -15,7 +15,7 @@ namespace esm
 	public:
 		std::string name;
 		std::string id;
-		int classId;
+		int classId = -1;
 	};
 
 	struct ClassInfo
@@ -40,7 +40,7 @@ namespace esm
 			return scores;
 		}
 
-		ExamModel() : id(0) {}
+		ExamModel() : id(-1) {}
 		ExamModel(const int id) : id(id) {}
 		ExamModel(const ExamModel& other) : id(other.id), title(other.title) {}
 		ExamModel& operator=(const ExamModel& other)

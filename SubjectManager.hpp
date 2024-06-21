@@ -5,10 +5,11 @@
 
 #include <vector>
 #include <string>
+#include "PersistentData.hpp"
 
 namespace esm
 {
-	class SubjectManager
+	class SubjectManager : public PersistentDataSavable
 	{
 	public:
 		static SubjectManager& getInstance();
@@ -27,10 +28,13 @@ namespace esm
 
 		int addSubject(std::string&& name);
 
+		bool save() override;
+
+		bool load() override;
 	private:
 		std::vector<std::string> subjects;
 
-		SubjectManager() = default;
+		SubjectManager() : PersistentDataSavable("data/subjects.csv") {}
 		~SubjectManager() = default;
 
 		SubjectManager(const SubjectManager& other) = delete;

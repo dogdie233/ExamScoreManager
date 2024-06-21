@@ -3,6 +3,7 @@
 #ifndef ESM_COMMANDS_HPP
 #define ESM_COMMANDS_HPP
 
+#include "Student.hpp"
 #include "Command.hpp"
 #include <memory>
 #include <functional>
@@ -128,6 +129,76 @@ namespace esm
 	{
 	public:
 		StudentAddCommand();
+
+		void Invoke() override;
+	};
+
+	class StudentListCommand : public Command
+	{
+	public:
+		StudentListCommand();
+
+		void Invoke() override;
+	};
+
+	class ExistingStudentManagementCommand : public Command
+	{
+	public:
+		std::shared_ptr<StudentInfo> selectedStudentPtr = nullptr;
+
+		ExistingStudentManagementCommand();
+
+		void Invoke() override;
+	};
+
+	class StudentSelectionCommand : public Command
+	{
+	public:
+		ExistingStudentManagementCommand& management;
+
+		StudentSelectionCommand(ExistingStudentManagementCommand& management);
+
+		void Invoke() override;
+
+		void UpdateSelecting(std::shared_ptr<StudentInfo> studentPtr);
+	protected:
+		class ByIdCommand : public Command
+		{
+		public:
+			StudentSelectionCommand& parent;
+
+			ByIdCommand(StudentSelectionCommand& parent);
+
+			void Invoke() override;
+		};
+
+		class ByNameCommand : public Command
+		{
+		public:
+			const StudentSelectionCommand& parent;
+
+			ByNameCommand(StudentSelectionCommand& parent);
+
+			void Invoke() override;
+		};
+	};
+
+	class StudentRenameCommand : public Command
+	{
+	public:
+		ExistingStudentManagementCommand& management;
+
+		StudentRenameCommand(ExistingStudentManagementCommand& management);
+
+		void Invoke() override;
+	};
+
+	class StudentDeleteCommand : public Command
+	{
+	public:
+		ExistingStudentManagementCommand& management;
+
+		StudentDeleteCommand(ExistingStudentManagementCommand& management);
 
 		void Invoke() override;
 	};

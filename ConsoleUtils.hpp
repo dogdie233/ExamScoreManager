@@ -52,5 +52,7 @@ namespace con
 	/// 设置光标行内绝对位置
 	/// </summary>
 	CHA cha(int pos);
+
+	std::string chaCmd(int pos);
 }
 #endif

@@ -14,9 +14,15 @@ namespace esm
 	public:
 		static StudentManager& getInstance() noexcept;
 
+		std::shared_ptr<StudentInfo> getStudentById(const std::string& id);
+
+		std::vector<std::shared_ptr<StudentInfo>> getStudentsByNameRegex(const std::string& regex);
+
 		void addStudent(const StudentInfo& student);
 
 		std::vector<std::shared_ptr<StudentInfo>>& getStudents() noexcept;
+
+		void removeStudent(std::shared_ptr<StudentInfo>&& pStudent);
 
 		int addClass(const std::string& className);
 

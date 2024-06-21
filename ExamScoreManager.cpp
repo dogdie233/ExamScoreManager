@@ -6,6 +6,7 @@
 #include "Navigator.hpp"
 #include "Breadcrumb.hpp"
 #include "ConsoleUtils.hpp"
+#include "SubjectManager.hpp"
 
 namespace esm
 {
@@ -26,6 +27,9 @@ using namespace esm;
 int main()
 {
 	con::initConsole();
+
+	std::cout << "科目信息加载" << (SubjectManager::getInstance().load() ? "成功" : "失败");
+	waitAnyKeyPressed();
 
 	addMain();
 	while (!Navigator::getInstance().getAll().empty())

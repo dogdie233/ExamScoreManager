@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <iostream>
 #include <iomanip>
+#include <string>
 
 namespace con
 {
@@ -75,5 +76,10 @@ namespace con
 	CHA cha(int pos)
 	{
 		return CHA(pos);
+	}
+
+	std::string chaCmd(int pos)
+	{
+		return "\033[" + std::to_string(pos) + "G";
 	}
 }

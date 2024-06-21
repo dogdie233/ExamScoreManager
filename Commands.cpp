@@ -17,18 +17,20 @@ namespace esm
 		Navigator::getInstance().pop();
 	}
 
-	std::unique_ptr<BackCommand> makeBackCommandPtr()
+	inline std::unique_ptr<BackCommand> makeBackCommandPtr()
 	{
 		return std::make_unique<BackCommand>("返回");
 	}
 
-	LambdaCommand::LambdaCommand(const std::string& title, std::function<void(void)>) : Command(title), callback{ callback } {}
+	LambdaCommand::LambdaCommand(const std::string& title, std::function<void(void)>)
+		: Command(title), callback{ callback } {}
 	void LambdaCommand::Invoke()
 	{
 		callback();
 	}
 
-	TestCommand::TestCommand(const std::string& title, int depth) : Command(std::format("{}{}", title, depth)), depth(depth) {}
+	TestCommand::TestCommand(const std::string& title, int depth)
+		: Command(std::format("{}{}", title, depth)), depth(depth) {}
 	void TestCommand::Invoke()
 	{
 		auto breadcrumb = Breadcrumb(std::format("测试{}", depth));
@@ -78,7 +80,7 @@ namespace esm
 	}
 
 	SubjectSelectionCommand::SubjectSelectionCommand(std::function<void(int)> callback, int selecting)
-		: callback{ callback }, selecting(selecting), Command("选择一个课程") {}
+		: Command("选择一个课程"), callback{ callback }, selecting(selecting) {}
 	void SubjectSelectionCommand::Invoke()
 	{
 		if (SubjectManager::getInstance().getSubjects().size() == 0)
@@ -114,7 +116,8 @@ namespace esm
 		Navigator::getInstance().pop();
 	}
 
-	SubjectRenameCommand::SubjectRenameCommand(ExistingSubjectManagementCommand& management) : management{ management }, Command("重命名课程") {}
+	SubjectRenameCommand::SubjectRenameCommand(ExistingSubjectManagementCommand& management)
+		: Command("重命名课程"), management{ management } {}
 	void SubjectRenameCommand::Invoke()
 	{
 		if (management.selectedSubjectId == -1)
@@ -138,7 +141,8 @@ namespace esm
 		waitAnyKeyPressed();
 	}
 
-	SubjectDeleteCommand::SubjectDeleteCommand(ExistingSubjectManagementCommand& management) : management{ management }, Command("删除课程") {}
+	SubjectDeleteCommand::SubjectDeleteCommand(ExistingSubjectManagementCommand& management)
+		: Command("删除课程"), management{ management } {}
 	void SubjectDeleteCommand::Invoke()
 	{
 		if (management.selectedSubjectId == -1)
@@ -157,15 +161,15 @@ namespace esm
 		std::cin >> input;
 		if (input != name)
 		{
-			std::cout << con::textRed << "! 删除失败，输入不匹配" << con::textColorDefault << std::endl;
-			waitAnyKeyPressed();
-			return;
+			std::cout << con::textRed << "! 删除操作取消，输入不匹配" << con::textColorDefault << std::endl;
 		}
-
-		std::cout << con::textGreen << "√ 删除成功" << con::textColorDefault << std::endl;
-		SubjectManager::getInstance().removeSubject(management.selectedSubjectId);
+		else
+		{
+			std::cout << con::textGreen << "√ 删除成功" << con::textColorDefault << std::endl;
+			SubjectManager::getInstance().removeSubject(management.selectedSubjectId);
+			Navigator::getInstance().pop();
+		}
 		waitAnyKeyPressed();
-		Navigator::getInstance().pop();
 	}
 
 	ExistingSubjectManagementCommand::ExistingSubjectManagementCommand() : Command("管理已有课程") {}
@@ -218,7 +222,189 @@ namespace esm
 		stu.classId = selectOption(StudentManager::getInstance().getClasses(), 0);
 		con::setCursorPosition(x, y);
 		std::cout << StudentManager::getInstance().getClasses()[stu.classId] << '\n';
-		std::cout << con::textGreen << "√ 学生添加成功" << con::textColorDefault << std::endl;
+		if (StudentManager::getInstance().getStudentById(stu.id) != nullptr)
+			std::cout << con::textRed << "! 该学号已存在，添加失败" << con::textColorDefault << std::endl;
+		else
+		{
+			StudentManager::getInstance().addStudent(stu);
+			std::cout << con::textGreen << "√ 学生添加成功" << con::textColorDefault << std::endl;
+		}
+		waitAnyKeyPressed();
+	}
+
+	StudentListCommand::StudentListCommand() : Command("列出所有学生") {}
+	void StudentListCommand::Invoke()
+	{
+		auto& students = StudentManager::getInstance().getStudents();
+		clearConsole();
+		std::cout << "当前一共有 " << students.size() << " 个学生" << std::endl;
+		if (students.size() == 0)
+		{
+			waitAnyKeyPressed();
+			return;
+		}
+		auto names = students | std::views::transform([](const auto& p) -> int { return dummyStrLenCalc(p->name); });
+		int nameLongest = *std::max_element(names.begin(), names.end());
+		auto ids = students | std::views::transform([](const auto& p) -> int { return p->id.size(); });
+		int idLongest = *std::max_element(ids.begin(), ids.end());
+
+		nameLongest = max(nameLongest, 4);
+		idLongest = max(idLongest, 4);
+
+		int idPos = 1 + nameLongest + 2;
+		int classPos = idPos + idLongest + 2;
+		auto& classes = StudentManager::getInstance().getClasses();
+		std::cout << "姓名" << con::cha(idPos) << "学号" << con::cha(classPos) << "班级" << std::endl;
+		for (auto& stu : students)
+			std::cout << stu->name << con::cha(idPos) << stu->id << con::cha(classPos) << classes[stu->classId] << std::endl;
+		waitEnterPressed();
+	}
+
+	ExistingStudentManagementCommand::ExistingStudentManagementCommand()
+		: Command("管理已有学生"), selectedStudentPtr(nullptr) {}
+	void ExistingStudentManagementCommand::Invoke()
+	{
+		if (StudentManager::getInstance().getStudents().size() == 0)
+		{
+			std::cout << con::textRed << "! 请先添加学生" << con::textColorDefault << std::endl;
+			waitAnyKeyPressed();
+			return;
+		}
+
+		auto breadcrumb = Breadcrumb("已有学生管理");
+		breadcrumb.addCommand(makeBackCommandPtr());
+		breadcrumb.addCommand(std::make_unique<StudentSelectionCommand>(*this));
+		breadcrumb.addCommand(std::make_unique<StudentRenameCommand>(*this));
+		Navigator::getInstance().push(std::move(breadcrumb));
+		Navigator::getInstance().getAll().back().getCommands()[1]->Invoke();
+	}
+
+	StudentSelectionCommand::StudentSelectionCommand(ExistingStudentManagementCommand& management)
+		: Command("选择一个学生"), management{ management } {}
+	void StudentSelectionCommand::Invoke()
+	{
+		auto breadcrumb = Breadcrumb("选择学生");
+		breadcrumb.addCommand(makeBackCommandPtr());
+		breadcrumb.addCommand(std::make_unique<StudentSelectionCommand::ByIdCommand>(*this));
+		breadcrumb.addCommand(std::make_unique<StudentSelectionCommand::ByNameCommand>(*this));
+		Navigator::getInstance().push(std::move(breadcrumb));
+	}
+	void StudentSelectionCommand::UpdateSelecting(std::shared_ptr<StudentInfo> studentPtr)
+	{
+		if (studentPtr == nullptr)
+			this->title = "选择一个学生";
+		else
+			this->title = std::format("选择一个学生（当前选中：{}）", studentPtr->name);
+		management.selectedStudentPtr = studentPtr;
+	}
+
+	StudentSelectionCommand::ByIdCommand::ByIdCommand(StudentSelectionCommand& parent)
+		: Command("按ID查找"), parent{ parent } {}
+	void StudentSelectionCommand::ByIdCommand::Invoke()
+	{
+		std::string id;
+		std::cout << "请输入学生学号：";
+		std::cin >> id;
+		auto pStu = StudentManager::getInstance().getStudentById(id);
+		if (pStu == nullptr)
+			std::cout << con::textRed << "! 未找到学号为" << id << "的学生" << con::textColorDefault << std::endl;
+		else
+		{
+			parent.UpdateSelecting(pStu);
+			std::cout << con::textGreen << "√ 已选中学生 " << pStu->name << "（" << pStu->id << "）" << con::textColorDefault << std::endl;
+			Navigator::getInstance().pop();
+		}
+		waitAnyKeyPressed();
+	}
+
+	StudentSelectionCommand::ByNameCommand::ByNameCommand(StudentSelectionCommand& parent)
+		: Command("按姓名模糊查找"), parent{ parent } {}
+	void StudentSelectionCommand::ByNameCommand::Invoke()
+	{
+		std::string name;
+		std::cout << "请输入学生姓名：";
+		std::cin >> name;
+		auto students = StudentManager::getInstance().getStudentsByNameRegex(name);
+		if (students.size() == 0)
+		{
+			std::cout << con::textRed << "! 未找到姓名中包含\"" << name << "\"的学生" << con::textColorDefault << std::endl;
+			waitAnyKeyPressed();
+			students.clear();
+			return;
+		}
+
+		if (students.size() > 20)
+		{
+			std::cout << con::textYellow << "! 匹配到超过20个学生，只显示前20个" << con::textColorDefault << std::endl;
+			students.erase(students.begin() + 20, students.end());
+		}
+		std::vector<std::string> names(students.size());
+		auto ids = students | std::views::transform([](const auto& p) -> int { return dummyStrLenCalc(p->id); });
+		int idLongest = *std::max_element(ids.begin(), ids.end());
+		idLongest = max(idLongest, 8);
+		for (int i = 0; i < students.size(); i++)
+			names[i] = students[i]->id + con::chaCmd(1 + idLongest + 2) + students[i]->name;
+
+		std::cout << "请选择一个学生：" << std::flush;
+		int x, y;
+		con::getCursorPosition(x, y);
+		std::cout << '\n';
+		int selected = selectOption(names, 0);
+		auto& pStu = students[selected];
+		parent.management.selectedStudentPtr = pStu;
+		con::setCursorPosition(x, y);
+		std::cout << pStu->name << "（" << pStu->id << "）" << '\n';
+		std::cout << con::textGreen << "√ 选择完成" << con::textColorDefault << std::endl;
+		Navigator::getInstance().pop();
+		students.clear();
+		waitAnyKeyPressed();
+	}
+
+	StudentRenameCommand::StudentRenameCommand(ExistingStudentManagementCommand& management)
+		: Command("重命名学生"), management{ management } {}
+	void StudentRenameCommand::Invoke()
+	{
+		if (management.selectedStudentPtr == nullptr)
+		{
+			std::cout << con::textRed << "! 请先选择一个学生" << con::textColorDefault << std::endl;
+			waitAnyKeyPressed();
+			return;
+		}
+		std::cout << "请输入新的姓名：";
+		std::string name;
+		std::cin >> name;
+		management.selectedStudentPtr->name = name;
+		std::cout << con::textGreen << "√ 重命名成功" << con::textColorDefault << std::endl;
+		Navigator::getInstance().pop();
+		waitAnyKeyPressed();
+	}
+
+	StudentDeleteCommand::StudentDeleteCommand(ExistingStudentManagementCommand& management)
+		: Command("删除学生"), management{ management } {}
+	void StudentDeleteCommand::Invoke()
+	{
+		if (management.selectedStudentPtr == nullptr)
+		{
+			std::cout << con::textRed << "! 请先选择一个学生" << con::textColorDefault << std::endl;
+			waitAnyKeyPressed();
+			return;
+		}
+		auto& name = management.selectedStudentPtr->name;
+		std::cout << con::textYellow << "? 你确定要删除学生\"" << name << "\"吗" << con::textColorDefault << std::endl;
+		waitEnterPressed();
+		std::cout << con::textYellow << "? 你真的要删除学生\"" << name << "\"吗" << con::textColorDefault << std::endl;
+		waitEnterPressed();
+		std::cout << "如果确认删除请输入\"" << name << "\"：";
+		std::string input;
+		std::cin >> input;
+		if (input != name)
+			std::cout << con::textRed << "! 删除操作取消，输入不匹配" << con::textColorDefault << std::endl;
+		else
+		{
+			StudentManager::getInstance().removeStudent(std::move(management.selectedStudentPtr));
+			management.selectedStudentPtr = nullptr;
+			Navigator::getInstance().pop();
+		}
 		waitAnyKeyPressed();
 	}
 
@@ -239,6 +425,8 @@ namespace esm
 		auto breadcrumb = Breadcrumb("学生管理");
 		breadcrumb.addCommand(makeBackCommandPtr());
 		breadcrumb.addCommand(std::make_unique<StudentAddCommand>());
+		breadcrumb.addCommand(std::make_unique<StudentListCommand>());
+		breadcrumb.addCommand(std::make_unique<ExistingStudentManagementCommand>());
 		breadcrumb.addCommand(std::make_unique<ClassAddCommand>());
 		Navigator::getInstance().push(std::move(breadcrumb));
 	}

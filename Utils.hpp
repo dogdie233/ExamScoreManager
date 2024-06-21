@@ -3,9 +3,11 @@
 #ifndef ESM_UTILS_HPP
 #define ESM_UTILS_HPP
 
+#include <ranges>
 #include <vector>
 #include <string>
 #include <list>
+#include "PersistentData.hpp"
 
 namespace esm
 {
@@ -22,5 +24,13 @@ namespace esm
 	int selectOption(const std::vector<std::string>& options, int selecting = 0);
 
 	void clearConsole();
+
+	int stringCount(const std::string& str, const std::string& pattern);
+
+	int dummyStrLenCalc(const std::string& str);
+
+	bool CreateCsvWriterSafe(const PersistentData& persistentData, csv::CsvWriter& writer);
+	
+	bool CreateCsvReaderSafe(const PersistentData& persistentData, csv::CsvReader& writer);
 }
 #endif
