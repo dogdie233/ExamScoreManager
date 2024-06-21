@@ -6,10 +6,11 @@
 #include <vector>
 #include <memory>
 #include "Student.hpp"
+#include "PersistentData.hpp"
 
 namespace esm
 {
-	class StudentManager
+	class StudentManager : public PersistentDataSavable
 	{
 	public:
 		static StudentManager& getInstance() noexcept;
@@ -32,11 +33,15 @@ namespace esm
 
 		std::vector<std::string>& getClasses() noexcept;
 
+		bool save() override;
+
+		bool load() override;
+
 	private:
 		std::vector<std::shared_ptr<StudentInfo>> students;
 		std::vector<std::string> classes;
 
-		StudentManager() = default;
+		StudentManager() : PersistentDataSavable("data/students.csv") {}
 		~StudentManager() = default;
 
 		StudentManager(const StudentManager& other) = delete;

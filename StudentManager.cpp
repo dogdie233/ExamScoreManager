@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include "Student.hpp"
+#include "Utils.hpp"
 
 namespace esm
 {
@@ -77,5 +78,30 @@ namespace esm
 	std::vector<std::string>& StudentManager::getClasses() noexcept
 	{
 		return classes;
+	}
+
+	bool StudentManager::save()
+	{
+		csv::CsvWriter writer(nullptr);
+		if (!CreateCsvWriterSafe(this->persistentData, writer))
+			return false;
+
+		for (auto& stu : students)
+			writer << stu->id << stu->name << stu->classId << csv::endl;
+	}
+
+	bool StudentManager::load()
+	{
+		csv::CsvReader reader(nullptr);
+		if (!CreateCsvReaderSafe(this->persistentData, reader))
+			return false;
+
+		students.clear();
+		while (reader.hasNext())
+		{
+			StudentInfo stu;
+			reader >> stu.id >> stu.name >> stu.classId;
+			students.push_back(std::make_shared<StudentInfo>(stu));
+		}
 	}
 }
