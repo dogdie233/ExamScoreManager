@@ -52,34 +52,6 @@ namespace esm
 		students.erase(std::remove(students.begin(), students.end(), pStudent), students.end());
 	}
 
-	int StudentManager::addClass(const std::string& className)
-	{
-		return addClass(std::string(className));
-	}
-
-	int StudentManager::addClass(std::string&& className)
-	{
-		if (className.empty())
-			return -1;
-
-		int id = getClassId(className);
-		if (id != -1)
-			return id;
-
-		classes.push_back(std::move(className));
-		return classes.size() - 1;
-	}
-
-	int StudentManager::getClassId(const std::string& className)
-	{
-		return (find(classes.begin(), classes.end(), className) - classes.begin() + 1) % (classes.size() + 1) - 1;
-	}
-
-	std::vector<std::string>& StudentManager::getClasses() noexcept
-	{
-		return classes;
-	}
-
 	bool StudentManager::save()
 	{
 		csv::CsvWriter writer(nullptr);

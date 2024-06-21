@@ -48,6 +48,12 @@
     <ClCompile Include="PersistentData.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="ClassManager.hpp">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ClassManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Command.hpp">

@@ -133,6 +133,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Breadcrumb.cpp" />
+    <ClCompile Include="ClassManager.cpp" />
+    <ClCompile Include="ClassManager.hpp" />
     <ClCompile Include="Commands.cpp" />
     <ClCompile Include="ConsoleUtils.cpp" />
     <ClCompile Include="CsvHelper.cpp" />

@@ -25,21 +25,12 @@ namespace esm
 
 		void removeStudent(std::shared_ptr<StudentInfo>&& pStudent);
 
-		int addClass(const std::string& className);
-
-		int addClass(std::string&& className);
-
-		int getClassId(const std::string& className);
-
-		std::vector<std::string>& getClasses() noexcept;
-
 		bool save() override;
 
 		bool load() override;
 
 	private:
 		std::vector<std::shared_ptr<StudentInfo>> students;
-		std::vector<std::string> classes;
 
 		StudentManager() : PersistentDataSavable("data/students.csv") {}
 		~StudentManager() = default;

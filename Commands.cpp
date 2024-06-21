@@ -7,6 +7,7 @@
 #include "ConsoleUtils.hpp"
 #include "SubjectManager.hpp"
 #include "StudentManager.hpp"
+#include "ClassManager.hpp"
 #include "Navigator.hpp"
 
 namespace esm
@@ -204,7 +205,7 @@ namespace esm
 	StudentAddCommand::StudentAddCommand() : Command("添加学生") {}
 	void StudentAddCommand::Invoke()
 	{
-		if (StudentManager::getInstance().getClasses().size() == 0)
+		if (ClassManager::getInstance().getClasses().size() == 0)
 		{
 			std::cout << con::textRed << "! 请先添加班级" << con::textColorDefault << std::endl;
 			waitAnyKeyPressed();
@@ -219,9 +220,9 @@ namespace esm
 		int x, y;
 		con::getCursorPosition(x, y);
 		std::cout << std::endl;
-		stu.classId = selectOption(StudentManager::getInstance().getClasses(), 0);
+		stu.classId = selectOption(ClassManager::getInstance().getClasses(), 0);
 		con::setCursorPosition(x, y);
-		std::cout << StudentManager::getInstance().getClasses()[stu.classId] << '\n';
+		std::cout << ClassManager::getInstance().getClasses()[stu.classId] << '\n';
 		if (StudentManager::getInstance().getStudentById(stu.id) != nullptr)
 			std::cout << con::textRed << "! 该学号已存在，添加失败" << con::textColorDefault << std::endl;
 		else
@@ -253,7 +254,7 @@ namespace esm
 
 		int idPos = 1 + nameLongest + 2;
 		int classPos = idPos + idLongest + 2;
-		auto& classes = StudentManager::getInstance().getClasses();
+		auto& classes = ClassManager::getInstance().getClasses();
 		std::cout << "姓名" << con::cha(idPos) << "学号" << con::cha(classPos) << "班级" << std::endl;
 		for (auto& stu : students)
 			std::cout << stu->name << con::cha(idPos) << stu->id << con::cha(classPos) << classes[stu->classId] << std::endl;
@@ -414,7 +415,7 @@ namespace esm
 		std::cout << "请输入班级名称：";
 		std::string name;
 		std::cin >> name;
-		int id = StudentManager::getInstance().addClass(std::move(name));
+		int id = ClassManager::getInstance().addClass(std::move(name));
 		std::cout << con::textGreen << "√ 班级添加成功，ID为" << id << con::textColorDefault << std::endl;
 		waitAnyKeyPressed();
 	}
