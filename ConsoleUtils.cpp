@@ -1,16 +1,23 @@
 #include "ConsoleUtils.hpp"
+#include <locale>
 #include <Windows.h>
+#include <fcntl.h>
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <corecrt_io.h>
 
 namespace con
 {
 	void initConsole()
 	{
 		DWORD mode;
+		SetConsoleCP(CP_UTF8);
 		GetConsoleMode(stdinHandle, &mode);
 	    SetConsoleMode(stdinHandle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+		std::locale::global(std::locale("en_US.UTF-8"));
+		std::cin.imbue(std::locale("en_US.UTF-8"));
+		std::cout.imbue(std::locale("en_US.UTF-8"));
 	}
 
 	void getCursorPosition(int& x, int& y)

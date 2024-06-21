@@ -19,7 +19,7 @@ namespace esm
 
 	inline std::unique_ptr<BackCommand> makeBackCommandPtr()
 	{
-		return std::make_unique<BackCommand>("·µ»Ø");
+		return std::make_unique<BackCommand>("è¿”å›");
 	}
 
 	LambdaCommand::LambdaCommand(const std::string& title, std::function<void(void)>)
@@ -33,43 +33,43 @@ namespace esm
 		: Command(std::format("{}{}", title, depth)), depth(depth) {}
 	void TestCommand::Invoke()
 	{
-		auto breadcrumb = Breadcrumb(std::format("²âÊÔ{}", depth));
+		auto breadcrumb = Breadcrumb(std::format("æµ‹è¯•{}", depth));
 		breadcrumb.addCommand(makeBackCommandPtr());
 		for (int i = 1; i <= depth + 1; i++)
-			breadcrumb.addCommand(std::make_unique<TestCommand>("½øÈë²âÊÔ", i));
+			breadcrumb.addCommand(std::make_unique<TestCommand>("è¿›å…¥æµ‹è¯•", i));
 		Navigator::getInstance().push(std::move(breadcrumb));
 	}
 
-	SubjectNewCommand::SubjectNewCommand() : Command("Ìí¼Ó¿Î³Ì") {}
+	SubjectNewCommand::SubjectNewCommand() : Command("æ·»åŠ è¯¾ç¨‹") {}
 	void SubjectNewCommand::Invoke()
 	{
-		std::cout << "ÇëÊäÈë¿Î³ÌÃû³Æ£º";
+		std::cout << "è¯·è¾“å…¥è¯¾ç¨‹åç§°ï¼š";
 		std::string name;
 		std::cin >> name;
 		int id = SubjectManager::getInstance().getSubjectId(name);
 		if (id != -1)
 		{
-			std::cout << con::textYellow << "! ¿Î³ÌÒÑ´æÔÚ£¬idÎª" << id << con::textColorDefault << std::endl;
+			std::cout << con::textYellow << "! è¯¾ç¨‹å·²å­˜åœ¨ï¼Œidä¸º" << id << con::textColorDefault << std::endl;
 			waitEnterPressed();
 			return;
 		}
 		id = SubjectManager::getInstance().addSubject(std::move(name));
-		std::cout << con::textGreen << "¡Ì ¿Î³ÌÌí¼Ó³É¹¦£¬IDÎª" << id << con::textColorDefault << std::endl;
+		std::cout << con::textGreen << "âˆš è¯¾ç¨‹æ·»åŠ æˆåŠŸï¼ŒIDä¸º" << id << con::textColorDefault << std::endl;
 		waitAnyKeyPressed();
 	}
 
-	ListSubjectCommand::ListSubjectCommand() : Command("ÁĞ³öËùÓĞ¿Î³Ì") {}
+	ListSubjectCommand::ListSubjectCommand() : Command("åˆ—å‡ºæ‰€æœ‰è¯¾ç¨‹") {}
 	void ListSubjectCommand::Invoke()
 	{
 		clearConsole();
 		auto& subjects = SubjectManager::getInstance().getSubjects();
-		std::cout << "µ±Ç°Ò»¹²ÓĞ " << subjects.size() << " ¸ö¿Î³Ì" << std::endl;
+		std::cout << "å½“å‰ä¸€å…±æœ‰ " << subjects.size() << " ä¸ªè¯¾ç¨‹" << std::endl;
 		if (subjects.size() == 0)
 		{
 			waitAnyKeyPressed();
 			return;
 		}
-		std::cout << "ID" << con::cha(4) << "¿Î³ÌÃû³Æ" << std::endl;
+		std::cout << "ID" << con::cha(4) << "è¯¾ç¨‹åç§°" << std::endl;
 		for (int i = 0; i < subjects.size(); i++)
 		{
 			if (subjects[i].empty())
@@ -80,17 +80,17 @@ namespace esm
 	}
 
 	SubjectSelectionCommand::SubjectSelectionCommand(std::function<void(int)> callback, int selecting)
-		: Command("Ñ¡ÔñÒ»¸ö¿Î³Ì"), callback{ callback }, selecting(selecting) {}
+		: Command("é€‰æ‹©ä¸€ä¸ªè¯¾ç¨‹"), callback{ callback }, selecting(selecting) {}
 	void SubjectSelectionCommand::Invoke()
 	{
 		if (SubjectManager::getInstance().getSubjects().size() == 0)
 		{
-			std::cout << con::textRed << "! ÇëÏÈÌí¼Ó¿Î³Ì" << con::textColorDefault << std::endl;
+			std::cout << con::textRed << "! è¯·å…ˆæ·»åŠ è¯¾ç¨‹" << con::textColorDefault << std::endl;
 			callback(-1);
 			waitAnyKeyPressed();
 			return;
 		}
-		auto breadcrumb = Breadcrumb("Ñ¡Ôñ¿Î³Ì");
+		auto breadcrumb = Breadcrumb("é€‰æ‹©è¯¾ç¨‹");
 		auto& subjects = SubjectManager::getInstance().getSubjects();
 		for (int i = 0; i < subjects.size(); i++)
 			breadcrumb.addCommand(std::make_unique<OptionCommand>(std::format("{}\033[4G{}", i, subjects[i]), *this, i));
@@ -103,9 +103,9 @@ namespace esm
 		if (this->callback != nullptr)
 			this->callback(selecting);
 		if (selecting == -1)
-			this->title = "Ñ¡ÔñÒ»¸ö¿Î³Ì";
+			this->title = "é€‰æ‹©ä¸€ä¸ªè¯¾ç¨‹";
 		else
-			this->title = std::format("Ñ¡ÔñÒ»¸ö¿Î³Ì£¨µ±Ç°Ñ¡ÖĞ£º{}£©", SubjectManager::getInstance().getSubjectName(selecting));
+			this->title = std::format("é€‰æ‹©ä¸€ä¸ªè¯¾ç¨‹ï¼ˆå½“å‰é€‰ä¸­ï¼š{}ï¼‰", SubjectManager::getInstance().getSubjectName(selecting));
 	}
 
 	SubjectSelectionCommand::OptionCommand::OptionCommand(std::string&& optionTitle, SubjectSelectionCommand& parent, int index)
@@ -117,71 +117,71 @@ namespace esm
 	}
 
 	SubjectRenameCommand::SubjectRenameCommand(ExistingSubjectManagementCommand& management)
-		: Command("ÖØÃüÃû¿Î³Ì"), management{ management } {}
+		: Command("é‡å‘½åè¯¾ç¨‹"), management{ management } {}
 	void SubjectRenameCommand::Invoke()
 	{
 		if (management.selectedSubjectId == -1)
 		{
-			std::cout << con::textRed << "! ÇëÏÈÑ¡ÔñÒ»¸ö¿Î³Ì" << con::textColorDefault << std::endl;
+			std::cout << con::textRed << "! è¯·å…ˆé€‰æ‹©ä¸€ä¸ªè¯¾ç¨‹" << con::textColorDefault << std::endl;
 			waitAnyKeyPressed();
 			return;
 		}
-		std::cout << "ÇëÊäÈëĞÂµÄ¿Î³ÌÃû³Æ£º";
+		std::cout << "è¯·è¾“å…¥æ–°çš„è¯¾ç¨‹åç§°ï¼š";
 		std::string name;
 		std::cin >> name;
 		bool succeed = SubjectManager::getInstance().renameSubject(management.selectedSubjectId, std::move(name));
 		if (succeed)
 		{
-			std::cout << con::textGreen << "¡Ì ÖØÃüÃû¿Î³Ì³É¹¦" << con::textColorDefault << std::endl;
+			std::cout << con::textGreen << "âˆš é‡å‘½åè¯¾ç¨‹æˆåŠŸ" << con::textColorDefault << std::endl;
 			waitAnyKeyPressed();
 			Navigator::getInstance().pop();
 		}
 		else
-			std::cout << con::textRed << "! ÖØÃüÃû¿Î³ÌÊ§°Ü£¬´ó¸ÅÊÇÃû×ÖÖØ¸´ÁË" << con::textColorDefault << std::endl;
+			std::cout << con::textRed << "! é‡å‘½åè¯¾ç¨‹å¤±è´¥ï¼Œå¤§æ¦‚æ˜¯åå­—é‡å¤äº†" << con::textColorDefault << std::endl;
 		waitAnyKeyPressed();
 	}
 
 	SubjectDeleteCommand::SubjectDeleteCommand(ExistingSubjectManagementCommand& management)
-		: Command("É¾³ı¿Î³Ì"), management{ management } {}
+		: Command("åˆ é™¤è¯¾ç¨‹"), management{ management } {}
 	void SubjectDeleteCommand::Invoke()
 	{
 		if (management.selectedSubjectId == -1)
 		{
-			std::cout << con::textRed << "! ÇëÏÈÑ¡ÔñÒ»¸ö¿Î³Ì" << con::textColorDefault << std::endl;
+			std::cout << con::textRed << "! è¯·å…ˆé€‰æ‹©ä¸€ä¸ªè¯¾ç¨‹" << con::textColorDefault << std::endl;
 			waitAnyKeyPressed();
 			return;
 		}
 		auto& name = SubjectManager::getInstance().getSubjectName(management.selectedSubjectId);
-		std::cout << con::textYellow << "? ÄãÈ·¶¨ÒªÉ¾³ı¿Î³Ì\"" << name << "\"Âğ" << con::textColorDefault << std::endl;
+		std::cout << con::textYellow << "? ä½ ç¡®å®šè¦åˆ é™¤è¯¾ç¨‹\"" << name << "\"å—" << con::textColorDefault << std::endl;
 		waitEnterPressed();
-		std::cout << con::textYellow << "? ÄãÕæµÄÒªÉ¾³ı¿Î³Ì\"" << name << "\"Âğ" << con::textColorDefault << std::endl;
+		std::cout << con::textYellow << "? ä½ çœŸçš„è¦åˆ é™¤è¯¾ç¨‹\"" << name << "\"å—" << con::textColorDefault << std::endl;
 		waitEnterPressed();
-		std::cout << "Èç¹ûÈ·ÈÏÉ¾³ıÇëÊäÈë\"" << name << "\"£º";
+		std::cout << "å¦‚æœç¡®è®¤åˆ é™¤è¯·è¾“å…¥\"" << name << "\"ï¼š";
 		std::string input;
 		std::cin >> input;
 		if (input != name)
 		{
-			std::cout << con::textRed << "! É¾³ı²Ù×÷È¡Ïû£¬ÊäÈë²»Æ¥Åä" << con::textColorDefault << std::endl;
+			std::cout << con::textRed << "! åˆ é™¤æ“ä½œå–æ¶ˆï¼Œè¾“å…¥ä¸åŒ¹é…" << con::textColorDefault << std::endl;
 		}
 		else
 		{
-			std::cout << con::textGreen << "¡Ì É¾³ı³É¹¦" << con::textColorDefault << std::endl;
+			std::cout << con::textGreen << "âˆš åˆ é™¤æˆåŠŸ" << con::textColorDefault << std::endl;
 			SubjectManager::getInstance().removeSubject(management.selectedSubjectId);
 			Navigator::getInstance().pop();
 		}
 		waitAnyKeyPressed();
 	}
 
-	ExistingSubjectManagementCommand::ExistingSubjectManagementCommand() : Command("¹ÜÀíÒÑÓĞ¿Î³Ì") {}
+	ExistingSubjectManagementCommand::ExistingSubjectManagementCommand() : Command("ç®¡ç†å·²æœ‰è¯¾ç¨‹") {}
 	void ExistingSubjectManagementCommand::Invoke()
 	{
 		if (SubjectManager::getInstance().getSubjects().size() == 0)
 		{
-			std::cout << con::textRed << "! ÇëÏÈÌí¼Ó¿Î³Ì" << con::textColorDefault << std::endl;
+			std::cout << con::textRed << "! è¯·å…ˆæ·»åŠ è¯¾ç¨‹" << con::textColorDefault << std::endl;
 			waitAnyKeyPressed();
 			return;
 		}
-		auto breadcrumb = Breadcrumb("ÒÑÓĞ¿Î³Ì¹ÜÀí");
+		auto breadcrumb = Breadcrumb("å·²æœ‰è¯¾ç¨‹ç®¡ç†");
 		breadcrumb.addCommand(makeBackCommandPtr());
 		breadcrumb.addCommand(std::make_unique<SubjectSelectionCommand>([this](int index) { this->selectedSubjectId = index; }));
 		breadcrumb.addCommand(std::make_unique<SubjectRenameCommand>(*this));
@@ -190,10 +190,10 @@ namespace esm
 		Navigator::getInstance().getAll().back().getCommands()[1]->Invoke();
 	}
 
-	SubjectManagementCommand::SubjectManagementCommand() : Command("¹ÜÀí¿Î³ÌĞÅÏ¢") {}
+	SubjectManagementCommand::SubjectManagementCommand() : Command("ç®¡ç†è¯¾ç¨‹ä¿¡æ¯") {}
 	void SubjectManagementCommand::Invoke()
 	{
-		auto breadcrumb = Breadcrumb("¿Î³Ì¹ÜÀí");
+		auto breadcrumb = Breadcrumb("è¯¾ç¨‹ç®¡ç†");
 		breadcrumb.addCommand(makeBackCommandPtr());
 		breadcrumb.addCommand(std::make_unique<SubjectNewCommand>());
 		breadcrumb.addCommand(std::make_unique<ListSubjectCommand>());
@@ -201,21 +201,21 @@ namespace esm
 		Navigator::getInstance().push(std::move(breadcrumb));
 	}
 
-	StudentAddCommand::StudentAddCommand() : Command("Ìí¼ÓÑ§Éú") {}
+	StudentAddCommand::StudentAddCommand() : Command("æ·»åŠ å­¦ç”Ÿ") {}
 	void StudentAddCommand::Invoke()
 	{
 		if (StudentManager::getInstance().getClasses().size() == 0)
 		{
-			std::cout << con::textRed << "! ÇëÏÈÌí¼Ó°à¼¶" << con::textColorDefault << std::endl;
+			std::cout << con::textRed << "! è¯·å…ˆæ·»åŠ ç­çº§" << con::textColorDefault << std::endl;
 			waitAnyKeyPressed();
 			return;
 		}
 		StudentInfo stu;
-		std::cout << "ÇëÊäÈëÑ§ÉúĞÕÃû£º";
+		std::cout << "è¯·è¾“å…¥å­¦ç”Ÿå§“åï¼š";
 		std::cin >> stu.name;
-		std::cout << "ÇëÊäÈëÑ§ÉúÑ§ºÅ£º";
+		std::cout << "è¯·è¾“å…¥å­¦ç”Ÿå­¦å·ï¼š";
 		std::cin >> stu.id;
-		std::cout << "ÇëÑ¡ÔñÑ§Éú°à¼¶£º";
+		std::cout << "è¯·é€‰æ‹©å­¦ç”Ÿç­çº§ï¼š";
 		int x, y;
 		con::getCursorPosition(x, y);
 		std::cout << std::endl;
@@ -223,21 +223,21 @@ namespace esm
 		con::setCursorPosition(x, y);
 		std::cout << StudentManager::getInstance().getClasses()[stu.classId] << '\n';
 		if (StudentManager::getInstance().getStudentById(stu.id) != nullptr)
-			std::cout << con::textRed << "! ¸ÃÑ§ºÅÒÑ´æÔÚ£¬Ìí¼ÓÊ§°Ü" << con::textColorDefault << std::endl;
+			std::cout << con::textRed << "! è¯¥å­¦å·å·²å­˜åœ¨ï¼Œæ·»åŠ å¤±è´¥" << con::textColorDefault << std::endl;
 		else
 		{
 			StudentManager::getInstance().addStudent(stu);
-			std::cout << con::textGreen << "¡Ì Ñ§ÉúÌí¼Ó³É¹¦" << con::textColorDefault << std::endl;
+			std::cout << con::textGreen << "âˆš å­¦ç”Ÿæ·»åŠ æˆåŠŸ" << con::textColorDefault << std::endl;
 		}
 		waitAnyKeyPressed();
 	}
 
-	StudentListCommand::StudentListCommand() : Command("ÁĞ³öËùÓĞÑ§Éú") {}
+	StudentListCommand::StudentListCommand() : Command("åˆ—å‡ºæ‰€æœ‰å­¦ç”Ÿ") {}
 	void StudentListCommand::Invoke()
 	{
 		auto& students = StudentManager::getInstance().getStudents();
 		clearConsole();
-		std::cout << "µ±Ç°Ò»¹²ÓĞ " << students.size() << " ¸öÑ§Éú" << std::endl;
+		std::cout << "å½“å‰ä¸€å…±æœ‰ " << students.size() << " ä¸ªå­¦ç”Ÿ" << std::endl;
 		if (students.size() == 0)
 		{
 			waitAnyKeyPressed();
@@ -254,24 +254,24 @@ namespace esm
 		int idPos = 1 + nameLongest + 2;
 		int classPos = idPos + idLongest + 2;
 		auto& classes = StudentManager::getInstance().getClasses();
-		std::cout << "ĞÕÃû" << con::cha(idPos) << "Ñ§ºÅ" << con::cha(classPos) << "°à¼¶" << std::endl;
+		std::cout << "å§“å" << con::cha(idPos) << "å­¦å·" << con::cha(classPos) << "ç­çº§" << std::endl;
 		for (auto& stu : students)
 			std::cout << stu->name << con::cha(idPos) << stu->id << con::cha(classPos) << classes[stu->classId] << std::endl;
 		waitEnterPressed();
 	}
 
 	ExistingStudentManagementCommand::ExistingStudentManagementCommand()
-		: Command("¹ÜÀíÒÑÓĞÑ§Éú"), selectedStudentPtr(nullptr) {}
+		: Command("ç®¡ç†å·²æœ‰å­¦ç”Ÿ"), selectedStudentPtr(nullptr) {}
 	void ExistingStudentManagementCommand::Invoke()
 	{
 		if (StudentManager::getInstance().getStudents().size() == 0)
 		{
-			std::cout << con::textRed << "! ÇëÏÈÌí¼ÓÑ§Éú" << con::textColorDefault << std::endl;
+			std::cout << con::textRed << "! è¯·å…ˆæ·»åŠ å­¦ç”Ÿ" << con::textColorDefault << std::endl;
 			waitAnyKeyPressed();
 			return;
 		}
 
-		auto breadcrumb = Breadcrumb("ÒÑÓĞÑ§Éú¹ÜÀí");
+		auto breadcrumb = Breadcrumb("å·²æœ‰å­¦ç”Ÿç®¡ç†");
 		breadcrumb.addCommand(makeBackCommandPtr());
 		breadcrumb.addCommand(std::make_unique<StudentSelectionCommand>(*this));
 		breadcrumb.addCommand(std::make_unique<StudentRenameCommand>(*this));
@@ -280,10 +280,10 @@ namespace esm
 	}
 
 	StudentSelectionCommand::StudentSelectionCommand(ExistingStudentManagementCommand& management)
-		: Command("Ñ¡ÔñÒ»¸öÑ§Éú"), management{ management } {}
+		: Command("é€‰æ‹©ä¸€ä¸ªå­¦ç”Ÿ"), management{ management } {}
 	void StudentSelectionCommand::Invoke()
 	{
-		auto breadcrumb = Breadcrumb("Ñ¡ÔñÑ§Éú");
+		auto breadcrumb = Breadcrumb("é€‰æ‹©å­¦ç”Ÿ");
 		breadcrumb.addCommand(makeBackCommandPtr());
 		breadcrumb.addCommand(std::make_unique<StudentSelectionCommand::ByIdCommand>(*this));
 		breadcrumb.addCommand(std::make_unique<StudentSelectionCommand::ByNameCommand>(*this));
@@ -292,42 +292,42 @@ namespace esm
 	void StudentSelectionCommand::UpdateSelecting(std::shared_ptr<StudentInfo> studentPtr)
 	{
 		if (studentPtr == nullptr)
-			this->title = "Ñ¡ÔñÒ»¸öÑ§Éú";
+			this->title = "é€‰æ‹©ä¸€ä¸ªå­¦ç”Ÿ";
 		else
-			this->title = std::format("Ñ¡ÔñÒ»¸öÑ§Éú£¨µ±Ç°Ñ¡ÖĞ£º{}£©", studentPtr->name);
+			this->title = std::format("é€‰æ‹©ä¸€ä¸ªå­¦ç”Ÿï¼ˆå½“å‰é€‰ä¸­ï¼š{}ï¼‰", studentPtr->name);
 		management.selectedStudentPtr = studentPtr;
 	}
 
 	StudentSelectionCommand::ByIdCommand::ByIdCommand(StudentSelectionCommand& parent)
-		: Command("°´ID²éÕÒ"), parent{ parent } {}
+		: Command("æŒ‰IDæŸ¥æ‰¾"), parent{ parent } {}
 	void StudentSelectionCommand::ByIdCommand::Invoke()
 	{
 		std::string id;
-		std::cout << "ÇëÊäÈëÑ§ÉúÑ§ºÅ£º";
+		std::cout << "è¯·è¾“å…¥å­¦ç”Ÿå­¦å·ï¼š";
 		std::cin >> id;
 		auto pStu = StudentManager::getInstance().getStudentById(id);
 		if (pStu == nullptr)
-			std::cout << con::textRed << "! Î´ÕÒµ½Ñ§ºÅÎª" << id << "µÄÑ§Éú" << con::textColorDefault << std::endl;
+			std::cout << con::textRed << "! æœªæ‰¾åˆ°å­¦å·ä¸º" << id << "çš„å­¦ç”Ÿ" << con::textColorDefault << std::endl;
 		else
 		{
 			parent.UpdateSelecting(pStu);
-			std::cout << con::textGreen << "¡Ì ÒÑÑ¡ÖĞÑ§Éú " << pStu->name << "£¨" << pStu->id << "£©" << con::textColorDefault << std::endl;
+			std::cout << con::textGreen << "âˆš å·²é€‰ä¸­å­¦ç”Ÿ " << pStu->name << "ï¼ˆ" << pStu->id << "ï¼‰" << con::textColorDefault << std::endl;
 			Navigator::getInstance().pop();
 		}
 		waitAnyKeyPressed();
 	}
 
 	StudentSelectionCommand::ByNameCommand::ByNameCommand(StudentSelectionCommand& parent)
-		: Command("°´ĞÕÃûÄ£ºı²éÕÒ"), parent{ parent } {}
+		: Command("æŒ‰å§“åæ¨¡ç³ŠæŸ¥æ‰¾"), parent{ parent } {}
 	void StudentSelectionCommand::ByNameCommand::Invoke()
 	{
 		std::string name;
-		std::cout << "ÇëÊäÈëÑ§ÉúĞÕÃû£º";
+		std::cout << "è¯·è¾“å…¥å­¦ç”Ÿå§“åï¼š";
 		std::cin >> name;
 		auto students = StudentManager::getInstance().getStudentsByNameRegex(name);
 		if (students.size() == 0)
 		{
-			std::cout << con::textRed << "! Î´ÕÒµ½ĞÕÃûÖĞ°üº¬\"" << name << "\"µÄÑ§Éú" << con::textColorDefault << std::endl;
+			std::cout << con::textRed << "! æœªæ‰¾åˆ°å§“åä¸­åŒ…å«\"" << name << "\"çš„å­¦ç”Ÿ" << con::textColorDefault << std::endl;
 			waitAnyKeyPressed();
 			students.clear();
 			return;
@@ -335,7 +335,7 @@ namespace esm
 
 		if (students.size() > 20)
 		{
-			std::cout << con::textYellow << "! Æ¥Åäµ½³¬¹ı20¸öÑ§Éú£¬Ö»ÏÔÊ¾Ç°20¸ö" << con::textColorDefault << std::endl;
+			std::cout << con::textYellow << "! åŒ¹é…åˆ°è¶…è¿‡20ä¸ªå­¦ç”Ÿï¼Œåªæ˜¾ç¤ºå‰20ä¸ª" << con::textColorDefault << std::endl;
 			students.erase(students.begin() + 20, students.end());
 		}
 		std::vector<std::string> names(students.size());
@@ -345,7 +345,7 @@ namespace esm
 		for (int i = 0; i < students.size(); i++)
 			names[i] = students[i]->id + con::chaCmd(1 + idLongest + 2) + students[i]->name;
 
-		std::cout << "ÇëÑ¡ÔñÒ»¸öÑ§Éú£º" << std::flush;
+		std::cout << "è¯·é€‰æ‹©ä¸€ä¸ªå­¦ç”Ÿï¼š" << std::flush;
 		int x, y;
 		con::getCursorPosition(x, y);
 		std::cout << '\n';
@@ -353,52 +353,52 @@ namespace esm
 		auto& pStu = students[selected];
 		parent.management.selectedStudentPtr = pStu;
 		con::setCursorPosition(x, y);
-		std::cout << pStu->name << "£¨" << pStu->id << "£©" << '\n';
-		std::cout << con::textGreen << "¡Ì Ñ¡ÔñÍê³É" << con::textColorDefault << std::endl;
+		std::cout << pStu->name << "ï¼ˆ" << pStu->id << "ï¼‰" << '\n';
+		std::cout << con::textGreen << "âˆš é€‰æ‹©å®Œæˆ" << con::textColorDefault << std::endl;
 		Navigator::getInstance().pop();
 		students.clear();
 		waitAnyKeyPressed();
 	}
 
 	StudentRenameCommand::StudentRenameCommand(ExistingStudentManagementCommand& management)
-		: Command("ÖØÃüÃûÑ§Éú"), management{ management } {}
+		: Command("é‡å‘½åå­¦ç”Ÿ"), management{ management } {}
 	void StudentRenameCommand::Invoke()
 	{
 		if (management.selectedStudentPtr == nullptr)
 		{
-			std::cout << con::textRed << "! ÇëÏÈÑ¡ÔñÒ»¸öÑ§Éú" << con::textColorDefault << std::endl;
+			std::cout << con::textRed << "! è¯·å…ˆé€‰æ‹©ä¸€ä¸ªå­¦ç”Ÿ" << con::textColorDefault << std::endl;
 			waitAnyKeyPressed();
 			return;
 		}
-		std::cout << "ÇëÊäÈëĞÂµÄĞÕÃû£º";
+		std::cout << "è¯·è¾“å…¥æ–°çš„å§“åï¼š";
 		std::string name;
 		std::cin >> name;
 		management.selectedStudentPtr->name = name;
-		std::cout << con::textGreen << "¡Ì ÖØÃüÃû³É¹¦" << con::textColorDefault << std::endl;
+		std::cout << con::textGreen << "âˆš é‡å‘½åæˆåŠŸ" << con::textColorDefault << std::endl;
 		Navigator::getInstance().pop();
 		waitAnyKeyPressed();
 	}
 
 	StudentDeleteCommand::StudentDeleteCommand(ExistingStudentManagementCommand& management)
-		: Command("É¾³ıÑ§Éú"), management{ management } {}
+		: Command("åˆ é™¤å­¦ç”Ÿ"), management{ management } {}
 	void StudentDeleteCommand::Invoke()
 	{
 		if (management.selectedStudentPtr == nullptr)
 		{
-			std::cout << con::textRed << "! ÇëÏÈÑ¡ÔñÒ»¸öÑ§Éú" << con::textColorDefault << std::endl;
+			std::cout << con::textRed << "! è¯·å…ˆé€‰æ‹©ä¸€ä¸ªå­¦ç”Ÿ" << con::textColorDefault << std::endl;
 			waitAnyKeyPressed();
 			return;
 		}
 		auto& name = management.selectedStudentPtr->name;
-		std::cout << con::textYellow << "? ÄãÈ·¶¨ÒªÉ¾³ıÑ§Éú\"" << name << "\"Âğ" << con::textColorDefault << std::endl;
+		std::cout << con::textYellow << "? ä½ ç¡®å®šè¦åˆ é™¤å­¦ç”Ÿ\"" << name << "\"å—" << con::textColorDefault << std::endl;
 		waitEnterPressed();
-		std::cout << con::textYellow << "? ÄãÕæµÄÒªÉ¾³ıÑ§Éú\"" << name << "\"Âğ" << con::textColorDefault << std::endl;
+		std::cout << con::textYellow << "? ä½ çœŸçš„è¦åˆ é™¤å­¦ç”Ÿ\"" << name << "\"å—" << con::textColorDefault << std::endl;
 		waitEnterPressed();
-		std::cout << "Èç¹ûÈ·ÈÏÉ¾³ıÇëÊäÈë\"" << name << "\"£º";
+		std::cout << "å¦‚æœç¡®è®¤åˆ é™¤è¯·è¾“å…¥\"" << name << "\"ï¼š";
 		std::string input;
 		std::cin >> input;
 		if (input != name)
-			std::cout << con::textRed << "! É¾³ı²Ù×÷È¡Ïû£¬ÊäÈë²»Æ¥Åä" << con::textColorDefault << std::endl;
+			std::cout << con::textRed << "! åˆ é™¤æ“ä½œå–æ¶ˆï¼Œè¾“å…¥ä¸åŒ¹é…" << con::textColorDefault << std::endl;
 		else
 		{
 			StudentManager::getInstance().removeStudent(std::move(management.selectedStudentPtr));
@@ -408,21 +408,21 @@ namespace esm
 		waitAnyKeyPressed();
 	}
 
-	ClassAddCommand::ClassAddCommand() : Command("Ìí¼Ó°à¼¶") {}
+	ClassAddCommand::ClassAddCommand() : Command("æ·»åŠ ç­çº§") {}
 	void ClassAddCommand::Invoke()
 	{
-		std::cout << "ÇëÊäÈë°à¼¶Ãû³Æ£º";
+		std::cout << "è¯·è¾“å…¥ç­çº§åç§°ï¼š";
 		std::string name;
 		std::cin >> name;
 		int id = StudentManager::getInstance().addClass(std::move(name));
-		std::cout << con::textGreen << "¡Ì °à¼¶Ìí¼Ó³É¹¦£¬IDÎª" << id << con::textColorDefault << std::endl;
+		std::cout << con::textGreen << "âˆš ç­çº§æ·»åŠ æˆåŠŸï¼ŒIDä¸º" << id << con::textColorDefault << std::endl;
 		waitAnyKeyPressed();
 	}
 
-	StudentManagementCommand::StudentManagementCommand() : Command("¹ÜÀíÑ§ÉúĞÅÏ¢") {}
+	StudentManagementCommand::StudentManagementCommand() : Command("ç®¡ç†å­¦ç”Ÿä¿¡æ¯") {}
 	void StudentManagementCommand::Invoke()
 	{
-		auto breadcrumb = Breadcrumb("Ñ§Éú¹ÜÀí");
+		auto breadcrumb = Breadcrumb("å­¦ç”Ÿç®¡ç†");
 		breadcrumb.addCommand(makeBackCommandPtr());
 		breadcrumb.addCommand(std::make_unique<StudentAddCommand>());
 		breadcrumb.addCommand(std::make_unique<StudentListCommand>());
@@ -431,10 +431,10 @@ namespace esm
 		Navigator::getInstance().push(std::move(breadcrumb));
 	}
 
-	ExamManagerCommand::ExamManagerCommand() : Command("¹ÜÀí¿¼ÊÔĞÅÏ¢") {}
+	ExamManagerCommand::ExamManagerCommand() : Command("ç®¡ç†è€ƒè¯•ä¿¡æ¯") {}
 	void ExamManagerCommand::Invoke()
 	{
-		auto breadcrumb = Breadcrumb("¿¼ÊÔ¹ÜÀí");
+		auto breadcrumb = Breadcrumb("è€ƒè¯•ç®¡ç†");
 		breadcrumb.addCommand(makeBackCommandPtr());
 		Navigator::getInstance().push(std::move(breadcrumb));
 	}

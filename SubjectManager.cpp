@@ -98,7 +98,7 @@ namespace esm
 		while (reader.hasNext())
 		{
 			std::string title;
-			int id;
+			int id = 0;
 			reader >> id >> title;
 			while (subjects.size() <= id)
 				subjects.push_back("");

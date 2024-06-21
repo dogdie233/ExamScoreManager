@@ -22,7 +22,7 @@ namespace esm
 
 	void printNavigator()
 	{
-		std::cout << "µ±Ç°Î»ÖÃ£º";
+		std::cout << "å½“å‰ä½ç½®ï¼š";
 		auto& navigator = Navigator::getInstance().getAll();
 		auto iter = navigator.begin();
 		while (iter != navigator.end())
@@ -65,7 +65,7 @@ namespace esm
 				++id;
 			}
 			std::cout << con::lineClear << "================\n";
-			std::cout << con::lineClear << "Í¨¹ý¡ü¡ý·½Ïò¼üÑ¡ÔñÃüÁî£¬»Ø³µ¼üÖ´ÐÐµ±Ç°Ñ¡ÖÐÃüÁî£¨ÂÌÉ«£©" << std::endl;
+			std::cout << con::lineClear << "é€šè¿‡â†‘â†“æ–¹å‘é”®é€‰æ‹©å‘½ä»¤ï¼Œå›žè½¦é”®æ‰§è¡Œå½“å‰é€‰ä¸­å‘½ä»¤ï¼ˆç»¿è‰²ï¼‰" << std::endl;
 
 			while (1)
 			{
@@ -167,7 +167,7 @@ namespace esm
 
 	int dummyStrLenCalc(const std::string& str)
 	{
-		int len = str.size() - stringCount(str, "¡¤");
+		int len = str.size() - stringCount(str, "Â·");
 		return len;
 	}
 	

@@ -18,6 +18,7 @@ namespace esm
 			throw std::runtime_error("Path is empty.");
 
 		auto fs = std::make_shared<std::ifstream>(path);
+		fs->imbue(std::locale("en_US.UTF-8"));
 		if (!fs->is_open())
 			throw std::runtime_error("Failed to open file: " + path);
 
@@ -36,6 +37,7 @@ namespace esm
 			std::filesystem::create_directories(dirPath);
 
 		auto fs = std::make_shared<std::ofstream>(path, std::ios::out | std::ios::trunc);
+		fs->imbue(std::locale("en_US.UTF-8"));
 		if (!fs->is_open())
 			throw std::runtime_error("Failed to open file: " + path);
 

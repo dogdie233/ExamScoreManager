@@ -12,17 +12,17 @@ namespace csv
     {
     public:
         /// <summary>
-        /// Ğ´csv×Ö·û´®£¬ÎªÁËÍµÀÁÖ±½ÓÈ«²¿ÓÃË«ÒıºÅÁË
+        /// å†™csvå­—ç¬¦ä¸²ï¼Œä¸ºäº†å·æ‡’ç›´æ¥å…¨éƒ¨ç”¨åŒå¼•å·äº†
         /// </summary>
-        /// <param name="output">Êä³öÁ÷</param>
-        /// <param name="str">Ô­×Ö·û´®</param>
+        /// <param name="output">è¾“å‡ºæµ</param>
+        /// <param name="str">åŸå­—ç¬¦ä¸²</param>
         static void writeCsvString(std::ostream& output, const std::string& str);
 
         /// <summary>
-        /// ½âÎönmµÄµ¥¸öcsv×Ö·û´®
+        /// è§£ænmçš„å•ä¸ªcsvå­—ç¬¦ä¸²
         /// </summary>
-        /// <param name="input">ÊäÈëÁ÷</param>
-        /// <param name="dest">Ä¿±ê×Ö·û´®</param>
+        /// <param name="input">è¾“å…¥æµ</param>
+        /// <param name="dest">ç›®æ ‡å­—ç¬¦ä¸²</param>
         static void readCsvString(std::istream& input, std::string& dest);
 
         static void solveDeliver(std::istream& input);

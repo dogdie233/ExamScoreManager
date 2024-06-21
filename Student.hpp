@@ -53,7 +53,7 @@ namespace esm
 			return *this;
 		}
 	private:
-		std::vector<std::pair<std::shared_ptr<StudentInfo>, std::vector<float>>> scores;  // 看不懂，菜就多练
+		std::vector<std::pair<std::shared_ptr<StudentInfo>, std::vector<float>>> scores;  // 鐪嬩笉鎳傦紝鑿滃氨澶氱粌
 	};
 }
 #endif

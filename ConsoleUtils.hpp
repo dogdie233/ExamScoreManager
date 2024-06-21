@@ -49,7 +49,7 @@ namespace con
 	};
 
 	/// <summary>
-	/// 设置光标行内绝对位置
+	/// 璁剧疆鍏夋爣琛屽唴缁濆浣嶇疆
 	/// </summary>
 	CHA cha(int pos);
 

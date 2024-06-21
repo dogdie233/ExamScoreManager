@@ -9,7 +9,7 @@ namespace csv
         output << '"';
         for (char ch : str) {
             output << ch;
-            if (ch == '"')  // csv×ªÒå¹æ¶¨
+            if (ch == '"')  // csvè½¬ä¹‰è§„å®š
                 output << '"';
         }
         output << '"';
@@ -18,7 +18,7 @@ namespace csv
     void CsvHelper::readCsvString(std::istream& input, std::string& dest)
     {
         char c;
-        dest.clear(); // È·±£Ä¿±ê×Ö·û´®ÊÇ¿ÕµÄ
+        dest.clear(); // ç¡®ä¿ç›®æ ‡å­—ç¬¦ä¸²æ˜¯ç©ºçš„
 
         input >> c;
         bool isInQuote = c == '"';
@@ -30,15 +30,15 @@ namespace csv
             if ((!isInQuote && (c == ',' || c == '\n')) || (isInQuote && c == '"' && (!input.get(c) || c != '"')))
             {
                 if (c == '\n' && input.peek() == '\r')
-                    input.get(); // Ìø¹ýWindows·ç¸ñµÄ»»ÐÐ·ûÖÐµÄ'\r'
+                    input.get(); // è·³è¿‡Windowsé£Žæ ¼çš„æ¢è¡Œç¬¦ä¸­çš„'\r'
                 break;
             }
             dest += c;
         } while (input.get(c));
 
-        // Èç¹ûÔÚÒýºÅÄÚ²¿½áÊø£¬ÐèÒªÌø¹ý½áÎ²µÄÒýºÅ
+        // å¦‚æžœåœ¨å¼•å·å†…éƒ¨ç»“æŸï¼Œéœ€è¦è·³è¿‡ç»“å°¾çš„å¼•å·
         if (isInQuote && c == '"') {
-            // ¿ÉÒÔÔÚÕâÀï´¦Àí½áÎ²µÄÒýºÅ£¬Èç¹ûÐèÒªµÄ»°
+            // å¯ä»¥åœ¨è¿™é‡Œå¤„ç†ç»“å°¾çš„å¼•å·ï¼Œå¦‚æžœéœ€è¦çš„è¯
         }
     }
 
@@ -47,8 +47,7 @@ namespace csv
         if (input.eof())
             return;
 
-        char c;
-        input.get(c);
+        int c = input.get();
         if (c == ',')
             return;
         if (c == '\n' && input.peek() == '\r')
@@ -85,8 +84,9 @@ namespace csv
             return *this;
         }
 
-        *input >> num;
-        CsvHelper::solveDeliver(*input);
+        std::string str;
+        CsvHelper::readCsvString(*input, str);
+        num = std::stoi(str);
         return *this;
     }
 
@@ -98,8 +98,9 @@ namespace csv
             return *this;
         }
 
-        *input >> num;
-        CsvHelper::solveDeliver(*input);
+        std::string str;
+        CsvHelper::readCsvString(*input, str);
+        num = std::stof(str);
         return *this;
     }
 
