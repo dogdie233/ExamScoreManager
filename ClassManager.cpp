@@ -24,6 +24,7 @@ namespace esm
 			return id;
 
 		classes.push_back(std::move(className));
+		save();
 		return classes.size() - 1;
 	}
 

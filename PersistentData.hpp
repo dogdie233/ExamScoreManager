@@ -18,6 +18,9 @@ namespace esm
 		csv::CsvWriter CreateWriter() const;
 
 		csv::CsvReader CreateReader() const;
+
+		void deleteSave() const;
+
 	private:
 		const std::string path;
 	};
@@ -28,6 +31,8 @@ namespace esm
 		virtual bool save() = 0;
 
 		virtual bool load() = 0;
+
+		void deleteSave() const;
 
 		PersistentDataSavable(const std::string path) : persistentData(path) {}
 	protected:

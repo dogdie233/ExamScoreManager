@@ -86,6 +86,7 @@ namespace esm
 			if (!subjects[i].empty())
 				writer << i << subjects[i] << csv::endl;
 		}
+		return true;
 	}
 
 	bool SubjectManager::load()

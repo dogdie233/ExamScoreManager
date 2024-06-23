@@ -40,6 +40,7 @@ namespace esm
 	void StudentManager::addStudent(const StudentInfo& student)
 	{
 		students.push_back(std::make_shared<StudentInfo>(StudentInfo(student)));
+		save();
 	}
 
 	std::vector<std::shared_ptr<StudentInfo>>& StudentManager::getStudents() noexcept
@@ -50,6 +51,7 @@ namespace esm
 	void StudentManager::removeStudent(std::shared_ptr<StudentInfo>&& pStudent)
 	{
 		students.erase(std::remove(students.begin(), students.end(), pStudent), students.end());
+		save();
 	}
 
 	bool StudentManager::save()
@@ -59,7 +61,8 @@ namespace esm
 			return false;
 
 		for (auto& stu : students)
-			writer << stu->id << stu->name << stu->classId << csv::endl;
+			writer << stu->id << stu->name << stu->gender << stu->classId << csv::endl;
+		return true;
 	}
 
 	bool StudentManager::load()
@@ -72,8 +75,9 @@ namespace esm
 		while (reader.hasNext())
 		{
 			StudentInfo stu;
-			reader >> stu.id >> stu.name >> stu.classId;
+			reader >> stu.id >> stu.name >> stu.gender >> stu.classId;
 			students.push_back(std::make_shared<StudentInfo>(stu));
 		}
+		return true;
 	}
 }

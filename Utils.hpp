@@ -32,5 +32,7 @@ namespace esm
 	bool CreateCsvWriterSafe(const PersistentData& persistentData, csv::CsvWriter& writer);
 	
 	bool CreateCsvReaderSafe(const PersistentData& persistentData, csv::CsvReader& writer);
+
+	bool ConfirmDeleteAction(const std::string& itemType, const std::string& itemName);
 }
 #endif

@@ -7,22 +7,32 @@
 #include <string>
 #include <stdexcept>
 #include "Student.hpp"
+#include "PersistentData.hpp"
+#include "ExamTable.hpp"
 
 namespace esm
 {
-	class ExamManager
+	class ExamManager : public PersistentDataSavable
 	{
 	public:
 		static ExamManager& getInstance();
 
-		ExamModel& newExam(const int id, const std::string title);
+		std::shared_ptr<ExamTable> newExam(const int id, const std::string& title);
+
+		void removeExam(const int id);
+
+		std::map<int, std::shared_ptr<ExamTable>> getExams();
 
 		int nextAvailableId() noexcept;
 
-	private:
-		std::map<int, ExamModel> exams;
+		bool save() override;
 
-		ExamManager() = default;
+		bool load() override;
+
+	private:
+		std::map<int, std::shared_ptr<ExamTable>> exams;
+
+		ExamManager() : PersistentDataSavable("data/exams.csv") {}
 		~ExamManager() = default;
 
 		ExamManager(const ExamManager& other) = delete;

@@ -7,6 +7,9 @@
 #include "Breadcrumb.hpp"
 #include "ConsoleUtils.hpp"
 #include "SubjectManager.hpp"
+#include "ClassManager.hpp"
+#include "StudentManager.hpp"
+#include "ExamManager.hpp"
 
 namespace esm
 {
@@ -29,6 +32,11 @@ int main()
 	con::initConsole();
 
 	std::cout << "科目信息加载" << (SubjectManager::getInstance().load() ? "成功" : "失败");
+	std::cout << "班级信息加载" << (ClassManager::getInstance().load() ? "成功" : "失败");
+	std::cout << "学生信息加载" << (StudentManager::getInstance().load() ? "成功" : "失败");
+	std::cout << "考试信息加载" << (ExamManager::getInstance().load() ? "成功" : "失败");
+	for (auto& exam : ExamManager::getInstance().getExams())
+		exam.second->load();
 	waitAnyKeyPressed();
 
 	addMain();

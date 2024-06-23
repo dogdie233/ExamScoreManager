@@ -48,8 +48,8 @@
     <ClCompile Include="PersistentData.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ClassManager.hpp">
-      <Filter>头文件</Filter>
+    <ClCompile Include="ExamTable.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ClassManager.cpp">
       <Filter>源文件</Filter>
@@ -90,6 +90,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="PersistentData.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ExamTable.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ClassManager.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

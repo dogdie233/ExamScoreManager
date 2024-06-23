@@ -25,6 +25,12 @@ namespace esm
 		return csv::CsvReader(fs);
 	}
 
+	void PersistentData::deleteSave() const
+	{
+		if (std::filesystem::exists(path))
+			std::filesystem::remove(path);
+	}
+
 	csv::CsvWriter PersistentData::CreateWriter() const
 	{
 		if (path.empty())
@@ -42,5 +48,10 @@ namespace esm
 			throw std::runtime_error("Failed to open file: " + path);
 
 		return csv::CsvWriter(fs);
+	}
+
+	void PersistentDataSavable::deleteSave() const
+	{
+		this->persistentData.deleteSave();
 	}
 }

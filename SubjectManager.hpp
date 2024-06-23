@@ -31,6 +31,7 @@ namespace esm
 		bool save() override;
 
 		bool load() override;
+
 	private:
 		std::vector<std::string> subjects;
 

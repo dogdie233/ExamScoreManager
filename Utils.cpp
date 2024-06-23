@@ -202,4 +202,22 @@ namespace esm
 			return false;
 		}
 	}
+
+	bool ConfirmDeleteAction(const std::string& itemType, const std::string& itemName)
+	{
+		std::cout << con::textYellow << "? 你确定要删除" << itemType << '"' << itemName << "\"吗" << con::textColorDefault << std::endl;
+		waitEnterPressed();
+		std::cout << con::textYellow << "? 你真的要删除" << itemType << '"' << itemName << "\"吗" << con::textColorDefault << std::endl;
+		waitEnterPressed();
+		std::cout << "如果确认删除请输入\"" << itemName << "\"：";
+		std::string input;
+		std::cin >> input;
+		if (input != itemName)
+		{
+			std::cout << con::textRed << "! 删除操作取消，输入不匹配" << con::textColorDefault << std::endl;
+			return false;
+		}
+		std::cout << con::textGreen << "√ 删除成功" << con::textColorDefault << std::endl;
+		return true;
+	}
 }

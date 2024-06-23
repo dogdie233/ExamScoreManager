@@ -4,6 +4,7 @@
 #define ESM_COMMANDS_HPP
 
 #include "Student.hpp"
+#include "ExamTable.hpp"
 #include "Command.hpp"
 #include <memory>
 #include <functional>
@@ -154,13 +155,14 @@ namespace esm
 	class StudentSelectionCommand : public Command
 	{
 	public:
-		ExistingStudentManagementCommand& management;
+		std::shared_ptr<StudentInfo> pStu;
 
-		StudentSelectionCommand(ExistingStudentManagementCommand& management);
+		StudentSelectionCommand(std::function<void(std::shared_ptr<StudentInfo>)> callback, std::shared_ptr<StudentInfo> pStu);
 
 		void Invoke() override;
 
 		void UpdateSelecting(std::shared_ptr<StudentInfo> studentPtr);
+
 	protected:
 		class ByIdCommand : public Command
 		{
@@ -175,12 +177,15 @@ namespace esm
 		class ByNameCommand : public Command
 		{
 		public:
-			const StudentSelectionCommand& parent;
+			StudentSelectionCommand& parent;
 
 			ByNameCommand(StudentSelectionCommand& parent);
 
 			void Invoke() override;
 		};
+
+	private:
+		std::function<void(std::shared_ptr<StudentInfo>)> callback;
 	};
 
 	class StudentRenameCommand : public Command
@@ -217,6 +222,94 @@ namespace esm
 		StudentManagementCommand();
 
 		void Invoke() override;
+	};
+
+	class ExamNewCommand : public Command
+	{
+	public:
+		ExamNewCommand();
+
+		void Invoke() override;
+	};
+
+	class ExamListCommand : public Command
+	{
+	public:
+		ExamListCommand();
+
+		void Invoke() override;
+	};
+
+	class ExamSelectionCommand : public Command
+	{
+	public:
+		std::shared_ptr<ExamTable> pExam;
+
+		ExamSelectionCommand(std::function<void(std::shared_ptr<ExamTable>)> callback, std::shared_ptr<ExamTable> pExam);
+
+		void Invoke() override;
+
+		void UpdateSelecting(std::shared_ptr<ExamTable> pExam);
+
+	private:
+		std::function<void(std::shared_ptr<ExamTable>)> callback;
+
+	protected:
+		class OptionCommand : public Command
+		{
+		public:
+			std::shared_ptr<ExamTable> pExam;
+
+			OptionCommand(std::string&& optionTitle, ExamSelectionCommand& parent, std::shared_ptr<ExamTable> pExam);
+
+			void Invoke() override;
+
+		private:
+			ExamSelectionCommand& parent;
+		};
+	};
+
+	class ExistingExamManagementCommand : public Command
+	{
+	public:
+		std::shared_ptr<ExamTable> pExam;
+
+		ExistingExamManagementCommand();
+
+		void Invoke() override;
+	};
+
+	class ExamRenameCommand : public Command
+	{
+	public:
+		ExistingExamManagementCommand& management;
+
+		ExamRenameCommand(ExistingExamManagementCommand& management);
+
+		void Invoke() override;
+	};
+
+	class ExamDeleteCommand : public Command
+	{
+	public:
+		ExamDeleteCommand(ExistingExamManagementCommand& management);
+
+		void Invoke() override;
+
+	private:
+		ExistingExamManagementCommand& management;
+	};
+
+	class ExamRecordUpdateCommand : public Command
+	{
+	public:
+		ExamRecordUpdateCommand(std::shared_ptr<StudentInfo> pStudent, std::shared_ptr<ExamTable> pExam);
+
+		void Invoke() override;
+
+	private:
+		std::shared_ptr<StudentInfo> pStudent;
+		std::shared_ptr<ExamTable> pExam;
 	};
 
 	class ExamManagerCommand : public Command

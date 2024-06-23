@@ -1,6 +1,6 @@
-#include "Commands.hpp"
-
 #include <format>
+
+#include "Commands.hpp"
 #include "Breadcrumb.hpp"
 #include "Command.hpp"
 #include "Utils.hpp"
@@ -8,7 +8,17 @@
 #include "SubjectManager.hpp"
 #include "StudentManager.hpp"
 #include "ClassManager.hpp"
+#include "ExamManager.hpp"
 #include "Navigator.hpp"
+
+#define ENSURE(expr, output) do { \
+	if (!(expr)) \
+	{ \
+		std::cout << con::textRed << (output) << con::textColorDefault << std::endl; \
+		waitAnyKeyPressed(); \
+		return; \
+	} \
+} while(false)
 
 namespace esm
 {
@@ -84,13 +94,7 @@ namespace esm
 		: Command("选择一个课程"), callback{ callback }, selecting(selecting) {}
 	void SubjectSelectionCommand::Invoke()
 	{
-		if (SubjectManager::getInstance().getSubjects().size() == 0)
-		{
-			std::cout << con::textRed << "! 请先添加课程" << con::textColorDefault << std::endl;
-			callback(-1);
-			waitAnyKeyPressed();
-			return;
-		}
+		ENSURE(SubjectManager::getInstance().getSubjects().size() != 0, "! 请先添加课程");
 		auto breadcrumb = Breadcrumb("选择课程");
 		auto& subjects = SubjectManager::getInstance().getSubjects();
 		for (int i = 0; i < subjects.size(); i++)
@@ -121,12 +125,7 @@ namespace esm
 		: Command("重命名课程"), management{ management } {}
 	void SubjectRenameCommand::Invoke()
 	{
-		if (management.selectedSubjectId == -1)
-		{
-			std::cout << con::textRed << "! 请先选择一个课程" << con::textColorDefault << std::endl;
-			waitAnyKeyPressed();
-			return;
-		}
+		ENSURE(management.selectedSubjectId != -1, "! 请先选择一个课程");
 		std::cout << "请输入新的课程名称：";
 		std::string name;
 		std::cin >> name;
@@ -146,27 +145,10 @@ namespace esm
 		: Command("删除课程"), management{ management } {}
 	void SubjectDeleteCommand::Invoke()
 	{
-		if (management.selectedSubjectId == -1)
-		{
-			std::cout << con::textRed << "! 请先选择一个课程" << con::textColorDefault << std::endl;
-			waitAnyKeyPressed();
-			return;
-		}
+		ENSURE(management.selectedSubjectId != -1, "! 请先选择一个课程");
 		auto& name = SubjectManager::getInstance().getSubjectName(management.selectedSubjectId);
-		std::cout << con::textYellow << "? 你确定要删除课程\"" << name << "\"吗" << con::textColorDefault << std::endl;
-		waitEnterPressed();
-		std::cout << con::textYellow << "? 你真的要删除课程\"" << name << "\"吗" << con::textColorDefault << std::endl;
-		waitEnterPressed();
-		std::cout << "如果确认删除请输入\"" << name << "\"：";
-		std::string input;
-		std::cin >> input;
-		if (input != name)
+		if (ConfirmDeleteAction("课程", name))
 		{
-			std::cout << con::textRed << "! 删除操作取消，输入不匹配" << con::textColorDefault << std::endl;
-		}
-		else
-		{
-			std::cout << con::textGreen << "√ 删除成功" << con::textColorDefault << std::endl;
 			SubjectManager::getInstance().removeSubject(management.selectedSubjectId);
 			Navigator::getInstance().pop();
 		}
@@ -176,12 +158,7 @@ namespace esm
 	ExistingSubjectManagementCommand::ExistingSubjectManagementCommand() : Command("管理已有课程") {}
 	void ExistingSubjectManagementCommand::Invoke()
 	{
-		if (SubjectManager::getInstance().getSubjects().size() == 0)
-		{
-			std::cout << con::textRed << "! 请先添加课程" << con::textColorDefault << std::endl;
-			waitAnyKeyPressed();
-			return;
-		}
+		ENSURE(SubjectManager::getInstance().getSubjects().size() != 0, "! 请先添加课程");
 		auto breadcrumb = Breadcrumb("已有课程管理");
 		breadcrumb.addCommand(makeBackCommandPtr());
 		breadcrumb.addCommand(std::make_unique<SubjectSelectionCommand>([this](int index) { this->selectedSubjectId = index; }));
@@ -205,12 +182,7 @@ namespace esm
 	StudentAddCommand::StudentAddCommand() : Command("添加学生") {}
 	void StudentAddCommand::Invoke()
 	{
-		if (ClassManager::getInstance().getClasses().size() == 0)
-		{
-			std::cout << con::textRed << "! 请先添加班级" << con::textColorDefault << std::endl;
-			waitAnyKeyPressed();
-			return;
-		}
+		ENSURE(ClassManager::getInstance().getClasses().size() != 0, "! 请先添加班级");
 		StudentInfo stu;
 		std::cout << "请输入学生姓名：";
 		std::cin >> stu.name;
@@ -265,23 +237,18 @@ namespace esm
 		: Command("管理已有学生"), selectedStudentPtr(nullptr) {}
 	void ExistingStudentManagementCommand::Invoke()
 	{
-		if (StudentManager::getInstance().getStudents().size() == 0)
-		{
-			std::cout << con::textRed << "! 请先添加学生" << con::textColorDefault << std::endl;
-			waitAnyKeyPressed();
-			return;
-		}
-
+		ENSURE(StudentManager::getInstance().getStudents().size() != 0, "! 请先添加学生");
 		auto breadcrumb = Breadcrumb("已有学生管理");
 		breadcrumb.addCommand(makeBackCommandPtr());
-		breadcrumb.addCommand(std::make_unique<StudentSelectionCommand>(*this));
+		breadcrumb.addCommand(std::make_unique<StudentSelectionCommand>([this](auto pStu) { this->selectedStudentPtr = pStu; }, nullptr));
 		breadcrumb.addCommand(std::make_unique<StudentRenameCommand>(*this));
+		breadcrumb.addCommand(std::make_unique<StudentDeleteCommand>(*this));
 		Navigator::getInstance().push(std::move(breadcrumb));
 		Navigator::getInstance().getAll().back().getCommands()[1]->Invoke();
 	}
 
-	StudentSelectionCommand::StudentSelectionCommand(ExistingStudentManagementCommand& management)
-		: Command("选择一个学生"), management{ management } {}
+	StudentSelectionCommand::StudentSelectionCommand(std::function<void(std::shared_ptr<StudentInfo>)> callback, std::shared_ptr<StudentInfo> pStu)
+		: Command("选择一个学生"), callback{ callback } {}
 	void StudentSelectionCommand::Invoke()
 	{
 		auto breadcrumb = Breadcrumb("选择学生");
@@ -296,7 +263,8 @@ namespace esm
 			this->title = "选择一个学生";
 		else
 			this->title = std::format("选择一个学生（当前选中：{}）", studentPtr->name);
-		management.selectedStudentPtr = studentPtr;
+		pStu = studentPtr;
+		callback(pStu);
 	}
 
 	StudentSelectionCommand::ByIdCommand::ByIdCommand(StudentSelectionCommand& parent)
@@ -352,7 +320,7 @@ namespace esm
 		std::cout << '\n';
 		int selected = selectOption(names, 0);
 		auto& pStu = students[selected];
-		parent.management.selectedStudentPtr = pStu;
+		parent.UpdateSelecting(pStu);
 		con::setCursorPosition(x, y);
 		std::cout << pStu->name << "（" << pStu->id << "）" << '\n';
 		std::cout << con::textGreen << "√ 选择完成" << con::textColorDefault << std::endl;
@@ -365,12 +333,7 @@ namespace esm
 		: Command("重命名学生"), management{ management } {}
 	void StudentRenameCommand::Invoke()
 	{
-		if (management.selectedStudentPtr == nullptr)
-		{
-			std::cout << con::textRed << "! 请先选择一个学生" << con::textColorDefault << std::endl;
-			waitAnyKeyPressed();
-			return;
-		}
+		ENSURE(management.selectedStudentPtr != nullptr, "! 请先选择一个学生");
 		std::cout << "请输入新的姓名：";
 		std::string name;
 		std::cin >> name;
@@ -384,23 +347,9 @@ namespace esm
 		: Command("删除学生"), management{ management } {}
 	void StudentDeleteCommand::Invoke()
 	{
-		if (management.selectedStudentPtr == nullptr)
-		{
-			std::cout << con::textRed << "! 请先选择一个学生" << con::textColorDefault << std::endl;
-			waitAnyKeyPressed();
-			return;
-		}
+		ENSURE(management.selectedStudentPtr != nullptr, "! 请先选择一个学生");
 		auto& name = management.selectedStudentPtr->name;
-		std::cout << con::textYellow << "? 你确定要删除学生\"" << name << "\"吗" << con::textColorDefault << std::endl;
-		waitEnterPressed();
-		std::cout << con::textYellow << "? 你真的要删除学生\"" << name << "\"吗" << con::textColorDefault << std::endl;
-		waitEnterPressed();
-		std::cout << "如果确认删除请输入\"" << name << "\"：";
-		std::string input;
-		std::cin >> input;
-		if (input != name)
-			std::cout << con::textRed << "! 删除操作取消，输入不匹配" << con::textColorDefault << std::endl;
-		else
+		if (ConfirmDeleteAction("学生", name))
 		{
 			StudentManager::getInstance().removeStudent(std::move(management.selectedStudentPtr));
 			management.selectedStudentPtr = nullptr;
@@ -432,11 +381,112 @@ namespace esm
 		Navigator::getInstance().push(std::move(breadcrumb));
 	}
 
+	ExamNewCommand::ExamNewCommand() : Command("新增考试") {}
+	void ExamNewCommand::Invoke()
+	{
+		std::cout << "请输入考试名称：";
+		std::string name;
+		std::cin >> name;
+		auto pExam = ExamManager::getInstance().newExam(ExamManager::getInstance().nextAvailableId(), name);
+		std::cout << con::textGreen << "√ 考试记录创建成功，ID为" << pExam->id << con::textColorDefault << std::endl;
+		waitAnyKeyPressed();
+	}
+
+	ExamListCommand::ExamListCommand() : Command("列出所有考试") {}
+	void ExamListCommand::Invoke()
+	{
+		auto exams = ExamManager::getInstance().getExams();
+		clearConsole();
+		std::cout << "当前一共有 " << exams.size() << " 个考试记录" << std::endl;
+		if (exams.size() == 0)
+		{
+			waitAnyKeyPressed();
+			return;
+		}
+		std::cout << "ID" << con::cha(6) << "考试名称" << std::endl;
+		for (auto& exam : exams)
+			std::cout << exam.second->id << con::cha(6) << exam.second->title << std::endl;
+		waitAnyKeyPressed();
+	}
+
+	ExamSelectionCommand::ExamSelectionCommand(std::function<void(std::shared_ptr<ExamTable>)> callback, std::shared_ptr<ExamTable> pExam)
+		: Command("选择一场考试"), callback{ callback }, pExam{ pExam } {}
+	void ExamSelectionCommand::Invoke()
+	{
+		auto breadcrumb = Breadcrumb("选择考试");
+		auto exams = ExamManager::getInstance().getExams();
+		for (auto& kvp : exams)
+			breadcrumb.addCommand(std::make_unique<OptionCommand>(std::format("{}\033[4G{}", kvp.second->id, kvp.second->title), *this, kvp.second));
+		Navigator::getInstance().push(std::move(breadcrumb));
+	}
+	void ExamSelectionCommand::UpdateSelecting(std::shared_ptr<ExamTable> pExam)
+	{
+		this->pExam = pExam;
+		if (pExam == nullptr)
+			this->title = "选择一场考试";
+		else
+			this->title = std::format("选择一场考试（当前选中：{}）", pExam->title);
+		callback(pExam);
+	}
+
+	ExamSelectionCommand::OptionCommand::OptionCommand(std::string&& optionTitle, ExamSelectionCommand& parent, std::shared_ptr<ExamTable> pExam)
+		: Command(optionTitle), parent{ parent }, pExam{ pExam } {}
+	void ExamSelectionCommand::OptionCommand::Invoke()
+	{
+		parent.UpdateSelecting(pExam);
+		Navigator::getInstance().pop();
+	}
+
+	ExistingExamManagementCommand::ExistingExamManagementCommand() : Command("管理单次考试成绩与信息"), pExam(nullptr) {}
+	void ExistingExamManagementCommand::Invoke()
+	{
+		ENSURE(ExamManager::getInstance().getExams().size() != 0, "! 请先添加考试");
+		auto breadcrumb = Breadcrumb("已有考试管理");
+		breadcrumb.addCommand(makeBackCommandPtr());
+		breadcrumb.addCommand(std::make_unique<ExamSelectionCommand>([this](auto pExam) { this->pExam = pExam; }, nullptr));
+		breadcrumb.addCommand(std::make_unique<ExamDeleteCommand>(*this));
+		breadcrumb.addCommand(std::make_unique<ExamRenameCommand>(*this));
+		Navigator::getInstance().push(std::move(breadcrumb));
+		Navigator::getInstance().getAll().back().getCommands()[1]->Invoke();
+	}
+
+	ExamRenameCommand::ExamRenameCommand(ExistingExamManagementCommand& management)
+		: Command("重命名考试"), management{ management } {}
+	void ExamRenameCommand::Invoke()
+	{
+		ENSURE(management.pExam != nullptr, "! 请先选择一个考试");
+		std::cout << "请输入新的考试名称：";
+		std::string name;
+		std::cin >> name;
+		management.pExam->title = name;
+		ExamManager::getInstance().save();
+		std::cout << con::textGreen << "√ 重命名成功" << con::textColorDefault << std::endl;
+		waitAnyKeyPressed();
+	}
+
+	ExamDeleteCommand::ExamDeleteCommand(ExistingExamManagementCommand& management)
+		: Command("删除考试"), management{ management } {}
+	void ExamDeleteCommand::Invoke()
+	{
+		ENSURE(management.pExam != nullptr, "! 请先选择一个考试");
+		auto& title = management.pExam->title;
+		if (ConfirmDeleteAction("考试", title))
+		{
+			ExamManager::getInstance().removeExam(management.pExam->id);
+			management.pExam = nullptr;
+			Navigator::getInstance().pop();
+		}
+		waitAnyKeyPressed();
+	}
+
 	ExamManagerCommand::ExamManagerCommand() : Command("管理考试信息") {}
 	void ExamManagerCommand::Invoke()
 	{
 		auto breadcrumb = Breadcrumb("考试管理");
 		breadcrumb.addCommand(makeBackCommandPtr());
+		breadcrumb.addCommand(std::make_unique<ExamNewCommand>());
+		breadcrumb.addCommand(std::make_unique<ExamListCommand>());
+		breadcrumb.addCommand(std::make_unique<ExistingExamManagementCommand>());
 		Navigator::getInstance().push(std::move(breadcrumb));
 	}
 }
