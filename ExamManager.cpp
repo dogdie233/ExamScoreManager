@@ -8,7 +8,7 @@
 
 namespace esm
 {
-	ExamManager& ExamManager::getInstance()
+	ExamManager& ExamManager::getInstance() noexcept
 	{
 		static ExamManager instance;
 		return instance;
@@ -36,7 +36,13 @@ namespace esm
 		}
 	}
 
-	std::map<int, std::shared_ptr<ExamTable>> ExamManager::getExams()
+	void ExamManager::removeSubject(const int subjectId) noexcept
+	{
+		for (auto& kvp : exams)
+			kvp.second->removeSubject(subjectId);
+	}
+
+	std::map<int, std::shared_ptr<ExamTable>> ExamManager::getExams() noexcept
 	{
 		return this->exams;
 	}

@@ -56,6 +56,22 @@ namespace esm
 		return subjects.size() - 1;
 	}
 
+	bool SubjectManager::isSubjectExist(int id)
+	{
+		return id >= 0 && id < subjects.size() && !subjects[id].empty();
+	}
+
+	int SubjectManager::getSubjectCount()
+	{
+		int count = 0;
+		for (auto& subject : subjects)
+		{
+			if (!subject.empty())
+				count++;
+		}
+		return count;
+	}
+
 	bool SubjectManager::renameSubject(const int id, const std::string& name)
 	{
 		if (id < 0 || id >= subjects.size() || getSubjectId(name) != -1)

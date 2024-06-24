@@ -119,7 +119,7 @@ namespace csv
     {
         if (!isNewLine)
             *output << ',';
-        *output << num;
+        *output << std::to_string(num);
         isNewLine = false;
         return *this;
     }
@@ -128,7 +128,7 @@ namespace csv
     {
         if (!isNewLine)
             *output << ',';
-        *output << num;
+        *output << std::fixed << std::to_string(num);
         isNewLine = false;
         return *this;
     }

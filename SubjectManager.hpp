@@ -28,6 +28,10 @@ namespace esm
 
 		int addSubject(std::string&& name);
 
+		bool isSubjectExist(int id);
+
+		int getSubjectCount();
+
 		bool save() override;
 
 		bool load() override;

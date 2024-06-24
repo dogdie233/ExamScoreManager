@@ -16,9 +16,15 @@ namespace esm
 		const int id;
 		std::string title;
 
-		void AddScoreInfo(std::pair<std::shared_ptr<StudentInfo>, std::vector<float>>&& pair);
+		void setStudentScore(const std::shared_ptr<StudentInfo>& pStudent, int subjectId, float score);
 
-		std::vector<std::pair<std::shared_ptr<StudentInfo>, std::vector<float>>>& getTable();
+		float getStudentScore(const std::shared_ptr<StudentInfo>& pStudent, int subjectId) const;
+
+		bool isStudentInTable(const std::shared_ptr<StudentInfo>& student) const;
+
+		void removeSubject(int subjectId);
+
+		std::vector<std::pair<std::shared_ptr<StudentInfo>, std::vector<float>>>& getTable() noexcept;
 
 		ExamTable();
 		ExamTable(const int id);
@@ -27,6 +33,7 @@ namespace esm
 		bool save() override;
 
 		bool load() override;
+
 	private:
 		std::vector<std::pair<std::shared_ptr<StudentInfo>, std::vector<float>>> table;  // 看不懂，菜就多练
 

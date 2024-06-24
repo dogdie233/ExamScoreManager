@@ -94,7 +94,7 @@ namespace esm
 		: Command("选择一个课程"), callback{ callback }, selecting(selecting) {}
 	void SubjectSelectionCommand::Invoke()
 	{
-		ENSURE(SubjectManager::getInstance().getSubjects().size() != 0, "! 请先添加课程");
+		ENSURE(SubjectManager::getInstance().getSubjectCount() != 0, "! 请先添加课程");
 		auto breadcrumb = Breadcrumb("选择课程");
 		auto& subjects = SubjectManager::getInstance().getSubjects();
 		for (int i = 0; i < subjects.size(); i++)
@@ -158,7 +158,7 @@ namespace esm
 	ExistingSubjectManagementCommand::ExistingSubjectManagementCommand() : Command("管理已有课程") {}
 	void ExistingSubjectManagementCommand::Invoke()
 	{
-		ENSURE(SubjectManager::getInstance().getSubjects().size() != 0, "! 请先添加课程");
+		ENSURE(SubjectManager::getInstance().getSubjectCount() != 0, "! 请先添加课程");
 		auto breadcrumb = Breadcrumb("已有课程管理");
 		breadcrumb.addCommand(makeBackCommandPtr());
 		breadcrumb.addCommand(std::make_unique<SubjectSelectionCommand>([this](int index) { this->selectedSubjectId = index; }));
@@ -279,8 +279,8 @@ namespace esm
 			std::cout << con::textRed << "! 未找到学号为" << id << "的学生" << con::textColorDefault << std::endl;
 		else
 		{
-			parent.UpdateSelecting(pStu);
 			std::cout << con::textGreen << "√ 已选中学生 " << pStu->name << "（" << pStu->id << "）" << con::textColorDefault << std::endl;
+			parent.UpdateSelecting(pStu);
 			Navigator::getInstance().pop();
 		}
 		waitAnyKeyPressed();
@@ -320,12 +320,12 @@ namespace esm
 		std::cout << '\n';
 		int selected = selectOption(names, 0);
 		auto& pStu = students[selected];
-		parent.UpdateSelecting(pStu);
 		con::setCursorPosition(x, y);
 		std::cout << pStu->name << "（" << pStu->id << "）" << '\n';
 		std::cout << con::textGreen << "√ 选择完成" << con::textColorDefault << std::endl;
-		Navigator::getInstance().pop();
 		students.clear();
+		parent.UpdateSelecting(pStu);
+		Navigator::getInstance().pop();
 		waitAnyKeyPressed();
 	}
 
@@ -415,6 +415,7 @@ namespace esm
 	{
 		auto breadcrumb = Breadcrumb("选择考试");
 		auto exams = ExamManager::getInstance().getExams();
+		breadcrumb.addCommand(makeBackCommandPtr());
 		for (auto& kvp : exams)
 			breadcrumb.addCommand(std::make_unique<OptionCommand>(std::format("{}\033[4G{}", kvp.second->id, kvp.second->title), *this, kvp.second));
 		Navigator::getInstance().push(std::move(breadcrumb));
@@ -446,6 +447,7 @@ namespace esm
 		breadcrumb.addCommand(std::make_unique<ExamSelectionCommand>([this](auto pExam) { this->pExam = pExam; }, nullptr));
 		breadcrumb.addCommand(std::make_unique<ExamDeleteCommand>(*this));
 		breadcrumb.addCommand(std::make_unique<ExamRenameCommand>(*this));
+		breadcrumb.addCommand(std::make_unique<ExamScoreAddCommand>(*this));
 		Navigator::getInstance().push(std::move(breadcrumb));
 		Navigator::getInstance().getAll().back().getCommands()[1]->Invoke();
 	}
@@ -479,8 +481,63 @@ namespace esm
 		waitAnyKeyPressed();
 	}
 
-	ExamManagerCommand::ExamManagerCommand() : Command("管理考试信息") {}
-	void ExamManagerCommand::Invoke()
+	ExamScoreAddCommand::ExamScoreAddCommand(ExistingExamManagementCommand& management)
+		: Command("添加学生成绩"), management{ management }, studentSelectionCmd([this](auto pStu) { OnStudentSelected(pStu); }, nullptr) {}
+	void ExamScoreAddCommand::Invoke()
+	{
+		ENSURE(SubjectManager::getInstance().getSubjectCount() != 0, "! 请先添加课程");
+		ENSURE(management.pExam != nullptr, "! 请先选择一次考试");
+		studentSelectionCmd.Invoke();
+	}
+	void ExamScoreAddCommand::OnStudentSelected(std::shared_ptr<StudentInfo> pStu)
+	{
+		if (pStu == nullptr)
+			return;
+		ENSURE(!management.pExam->isStudentInTable(pStu), "! 该学生已存在考试记录，无法添加，请使用修改功能");
+
+		clearConsole();
+		std::cout << "当前选中学生：" << pStu->name << "（" << pStu->id << "）" << std::endl;
+		std::cout << "请输入学生该科目的成绩，输入-1表示未参加考试" << std::endl;
+		auto& subjects = SubjectManager::getInstance().getSubjects();
+		for (int i = 0; i < subjects.size(); i++)
+		{
+			if (subjects[i].empty())
+				continue;
+			std::string input;
+			float score = -1.0f;
+			while (true)
+			{
+				std::cout << con::textYellow << subjects[i] << con::textColorDefault << "成绩：";
+				std::cin >> input;
+				try
+				{
+					score = std::stof(input);
+				}
+				catch (std::exception&)
+				{
+					std::cout << con::textRed << "! 请输入一个合法的数字" << con::textColorDefault << std::endl;
+					continue;
+				}
+				break;
+			}
+			management.pExam->setStudentScore(pStu, i, score);
+		}
+		std::cout << con::textGreen << "√ 成绩添加成功" << con::textColorDefault << std::endl;
+		management.pExam->save();
+		// waitAnyKeyPressed();
+	}
+
+	ExamRecordUpdateCommand::ExamRecordUpdateCommand(std::shared_ptr<StudentInfo> pStudent, std::shared_ptr<ExamTable> pExam)
+		: Command("更新成绩"), pStudent{ pStudent }, pExam{ pExam } {}
+	void ExamRecordUpdateCommand::Invoke()
+	{
+		ENSURE(!(pExam == nullptr && pStudent == nullptr), "! 请先选择一次考试和一个学生");
+		ENSURE(pExam != nullptr, "! 请先选择一次考试");
+		ENSURE(pStudent != nullptr, "! 请先选择一个学生");
+	}
+
+	ExamManagementCommand::ExamManagementCommand() : Command("管理考试信息") {}
+	void ExamManagementCommand::Invoke()
 	{
 		auto breadcrumb = Breadcrumb("考试管理");
 		breadcrumb.addCommand(makeBackCommandPtr());

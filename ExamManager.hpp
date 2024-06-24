@@ -15,13 +15,15 @@ namespace esm
 	class ExamManager : public PersistentDataSavable
 	{
 	public:
-		static ExamManager& getInstance();
+		static ExamManager& getInstance() noexcept;
 
 		std::shared_ptr<ExamTable> newExam(const int id, const std::string& title);
 
 		void removeExam(const int id);
 
-		std::map<int, std::shared_ptr<ExamTable>> getExams();
+		void removeSubject(const int subjectId) noexcept;
+
+		std::map<int, std::shared_ptr<ExamTable>> getExams() noexcept;
 
 		int nextAvailableId() noexcept;
 

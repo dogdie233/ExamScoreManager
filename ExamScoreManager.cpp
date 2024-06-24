@@ -19,7 +19,7 @@ namespace esm
 		breadcrumb.addCommand(std::make_unique<BackCommand>("退出程序"));
 		breadcrumb.addCommand(std::make_unique<SubjectManagementCommand>());
 		breadcrumb.addCommand(std::make_unique<StudentManagementCommand>());
-		breadcrumb.addCommand(std::make_unique<ExamManagerCommand>());
+		breadcrumb.addCommand(std::make_unique<ExamManagementCommand>());
 		breadcrumb.addCommand(std::make_unique<TestCommand>("测试", 1));
 		Navigator::getInstance().push(std::move(breadcrumb));
 	}
@@ -31,10 +31,10 @@ int main()
 {
 	con::initConsole();
 
-	std::cout << "科目信息加载" << (SubjectManager::getInstance().load() ? "成功" : "失败");
-	std::cout << "班级信息加载" << (ClassManager::getInstance().load() ? "成功" : "失败");
-	std::cout << "学生信息加载" << (StudentManager::getInstance().load() ? "成功" : "失败");
-	std::cout << "考试信息加载" << (ExamManager::getInstance().load() ? "成功" : "失败");
+	std::cout << "科目信息加载" << (SubjectManager::getInstance().load() ? "成功" : "失败") << std::endl;
+	std::cout << "班级信息加载" << (ClassManager::getInstance().load() ? "成功" : "失败") << std::endl;
+	std::cout << "学生信息加载" << (StudentManager::getInstance().load() ? "成功" : "失败") << std::endl;
+	std::cout << "考试信息加载" << (ExamManager::getInstance().load() ? "成功" : "失败") << std::endl;
 	for (auto& exam : ExamManager::getInstance().getExams())
 		exam.second->load();
 	waitAnyKeyPressed();
@@ -49,5 +49,6 @@ int main()
 		printCommands(tail);
 	}
 	std::cout << "程序已退出" << std::endl;
+	waitAnyKeyPressed();
 	return 0;
 }
