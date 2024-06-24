@@ -39,7 +39,10 @@ namespace esm
 	void ExamManager::removeSubject(const int subjectId) noexcept
 	{
 		for (auto& kvp : exams)
+		{
 			kvp.second->removeSubject(subjectId);
+			kvp.second->save();
+		}
 	}
 
 	std::map<int, std::shared_ptr<ExamTable>> ExamManager::getExams() noexcept
