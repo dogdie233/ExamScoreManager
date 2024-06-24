@@ -457,6 +457,7 @@ namespace esm
 		breadcrumb.addCommand(std::make_unique<ExamScorePrintCommand>(*this));
 		breadcrumb.addCommand(std::make_unique<ExamScoreAddCommand>(*this));
 		breadcrumb.addCommand(std::make_unique<ExamScoreUpdateCommand>(*this));
+		breadcrumb.addCommand(std::make_unique<ExamScoreDeleteCommand>(*this));
 		Navigator::getInstance().push(std::move(breadcrumb));
 		Navigator::getInstance().getAll().back().getCommands()[1]->Invoke();
 	}
@@ -653,17 +654,17 @@ namespace esm
 	}
 	void ExamScoreUpdateCommand::OnStudentSelected(std::shared_ptr<StudentInfo> pStu)
 	{
-		auto buildOption = [](const std::string& subject, const float score) -> std::string
-		{
-			if (score == -1.0f)
-				return std::format("{}：未参加", subject);
-			else
-				return std::format("{}：{:.2f}", subject, score);
-		};
-
 		if (pStu == nullptr)
 			return;
 		ENSURE(management.pExam->isStudentInTable(pStu), "! 该学生不存在考试记录，无法更新，请使用添加功能");
+		
+		auto buildOption = [](const std::string& subject, const float score) -> std::string
+			{
+				if (score == -1.0f)
+					return std::format("{}：未参加", subject);
+				else
+					return std::format("{}：{:.2f}", subject, score);
+			};
 
 		clearConsole();
 		auto& subjects = SubjectManager::getInstance().getSubjects();
@@ -732,6 +733,27 @@ namespace esm
 
 		management.pExam->save();
 		std::cout << con::textGreen << "√ 成绩更新成功" << con::textColorDefault << std::endl;
+	}
+
+	ExamScoreDeleteCommand::ExamScoreDeleteCommand(ExistingExamManagementCommand& management)
+		: Command("删除学生成绩"), management{ management }, studentSelectionCmd([this](auto pStu) { OnStudentSelected(pStu); }, nullptr) {}
+	void ExamScoreDeleteCommand::Invoke()
+	{
+		ENSURE(management.pExam != nullptr, "! 请先选择一次考试");
+		studentSelectionCmd.Invoke();
+	}
+	void ExamScoreDeleteCommand::OnStudentSelected(std::shared_ptr<StudentInfo> pStu)
+	{
+		if (pStu == nullptr)
+			return;
+		
+		if (management.pExam->removeStudent(pStu))
+		{
+			std::cout << con::textGreen << "√ 删除成功" << con::textColorDefault << std::endl;
+			management.pExam->save();
+		}
+		else
+			std::cout << con::textYellow << "* 此学生未被登记在此考试中" << con::textColorDefault << std::endl;
 	}
 
 	ExamManagementCommand::ExamManagementCommand() : Command("管理考试信息") {}

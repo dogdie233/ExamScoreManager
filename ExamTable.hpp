@@ -24,6 +24,8 @@ namespace esm
 
 		void removeSubject(int subjectId);
 
+		bool removeStudent(std::shared_ptr<StudentInfo> pStu) noexcept;
+
 		std::vector<std::pair<std::shared_ptr<StudentInfo>, std::vector<float>>>& getTable() noexcept;
 
 		ExamTable();

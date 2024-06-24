@@ -337,7 +337,21 @@ namespace esm
 		ExistingExamManagementCommand& management;
 		StudentSelectionCommand studentSelectionCmd;
 
-		void OnStudentSelected(std::shared_ptr<StudentInfo> pStua);
+		void OnStudentSelected(std::shared_ptr<StudentInfo> pStu);
+	};
+
+	class ExamScoreDeleteCommand : public Command
+	{
+	public:
+		ExamScoreDeleteCommand(ExistingExamManagementCommand& management);
+
+		void Invoke() override;
+
+	private:
+		ExistingExamManagementCommand& management;
+		StudentSelectionCommand studentSelectionCmd;
+
+		void OnStudentSelected(std::shared_ptr<StudentInfo> pStu);
 	};
 
 	class ExamManagementCommand : public Command

@@ -35,6 +35,7 @@ namespace esm
 		void deleteSave() const;
 
 		PersistentDataSavable(const std::string path) : persistentData(path) {}
+
 	protected:
 		esm::PersistentData persistentData;
 	};

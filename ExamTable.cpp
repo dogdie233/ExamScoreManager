@@ -47,11 +47,11 @@ namespace esm
 			std::string line;
 			*reader.input >> line;
 
-			int start = 0;
+			size_t start = 0;
 			while (start < line.size())
 			{
 				float score;
-				int end = line.find(',', start);
+				auto end = line.find(',', start);
 				if (end == std::string::npos)
 					end = line.size();
 				score = std::stof(line.substr(start, end - start));
@@ -128,6 +128,22 @@ namespace esm
 			if (pair.second.size() > subjectId)
 				pair.second[subjectId] = -1;
 		}
+	}
+
+	bool ExamTable::removeStudent(std::shared_ptr<StudentInfo> pStu) noexcept
+	{
+		if (pStu == nullptr)
+			return false;
+
+		for (auto it = table.cbegin(); it < table.cend(); it++)
+		{
+			if (it->first != pStu)
+				continue;
+
+			table.erase(it);
+			return true;
+		}
+		return false;
 	}
 
 	std::vector<std::pair<std::shared_ptr<StudentInfo>, std::vector<float>>>& ExamTable::getTable() noexcept
