@@ -1,4 +1,6 @@
 #include <format>
+#include <limits>
+#include <iomanip>
 
 #include "Commands.hpp"
 #include "Breadcrumb.hpp"
@@ -74,7 +76,7 @@ namespace esm
 	{
 		clearConsole();
 		auto& subjects = SubjectManager::getInstance().getSubjects();
-		std::cout << "当前一共有 " << subjects.size() << " 个课程" << std::endl;
+		std::cout << "当前一共有 " << SubjectManager::getInstance().getSubjectCount() << " 个课程" << std::endl;
 		if (subjects.size() == 0)
 		{
 			waitAnyKeyPressed();
@@ -98,7 +100,11 @@ namespace esm
 		auto breadcrumb = Breadcrumb("选择课程");
 		auto& subjects = SubjectManager::getInstance().getSubjects();
 		for (int i = 0; i < subjects.size(); i++)
+		{
+			if (subjects[i].empty())
+				continue;
 			breadcrumb.addCommand(std::make_unique<OptionCommand>(std::format("{}\033[4G{}", i, subjects[i]), *this, i));
+		}
 		breadcrumb.selecting = selecting;
 		Navigator::getInstance().push(std::move(breadcrumb));
 	}
@@ -149,6 +155,7 @@ namespace esm
 		auto& name = SubjectManager::getInstance().getSubjectName(management.selectedSubjectId);
 		if (ConfirmDeleteAction("课程", name))
 		{
+			ExamManager::getInstance().removeSubject(management.selectedSubjectId);
 			SubjectManager::getInstance().removeSubject(management.selectedSubjectId);
 			Navigator::getInstance().pop();
 		}
@@ -221,8 +228,8 @@ namespace esm
 		auto ids = students | std::views::transform([](const auto& p) -> int { return p->id.size(); });
 		int idLongest = *std::max_element(ids.begin(), ids.end());
 
-		nameLongest = max(nameLongest, 4);
-		idLongest = max(idLongest, 4);
+		nameLongest = std::max(nameLongest, 4);
+		idLongest = std::max(idLongest, 4);
 
 		int idPos = 1 + nameLongest + 2;
 		int classPos = idPos + idLongest + 2;
@@ -310,7 +317,7 @@ namespace esm
 		std::vector<std::string> names(students.size());
 		auto ids = students | std::views::transform([](const auto& p) -> int { return dummyStrLenCalc(p->id); });
 		int idLongest = *std::max_element(ids.begin(), ids.end());
-		idLongest = max(idLongest, 8);
+		idLongest = std::max(idLongest, 8);
 		for (int i = 0; i < students.size(); i++)
 			names[i] = students[i]->id + con::chaCmd(1 + idLongest + 2) + students[i]->name;
 
@@ -447,7 +454,9 @@ namespace esm
 		breadcrumb.addCommand(std::make_unique<ExamSelectionCommand>([this](auto pExam) { this->pExam = pExam; }, nullptr));
 		breadcrumb.addCommand(std::make_unique<ExamDeleteCommand>(*this));
 		breadcrumb.addCommand(std::make_unique<ExamRenameCommand>(*this));
+		breadcrumb.addCommand(std::make_unique<ExamScorePrintCommand>(*this));
 		breadcrumb.addCommand(std::make_unique<ExamScoreAddCommand>(*this));
+		breadcrumb.addCommand(std::make_unique<ExamScoreUpdateCommand>(*this));
 		Navigator::getInstance().push(std::move(breadcrumb));
 		Navigator::getInstance().getAll().back().getCommands()[1]->Invoke();
 	}
@@ -463,6 +472,7 @@ namespace esm
 		management.pExam->title = name;
 		ExamManager::getInstance().save();
 		std::cout << con::textGreen << "√ 重命名成功" << con::textColorDefault << std::endl;
+		Navigator::getInstance().pop();
 		waitAnyKeyPressed();
 	}
 
@@ -479,6 +489,113 @@ namespace esm
 			Navigator::getInstance().pop();
 		}
 		waitAnyKeyPressed();
+	}
+
+	ExamScorePrintCommand::ExamScorePrintCommand(ExistingExamManagementCommand& management)
+		: Command("打印本次考试所有成绩"), management{ management } {}
+	void ExamScorePrintCommand::Invoke()
+	{
+		const int subjectWidth = 16;
+
+		ENSURE(management.pExam != nullptr, "! 请先选择一次考试");
+		clearConsole();
+		std::cout << "考试名称：" << management.pExam->title << "    ID：" << management.pExam->id << std::endl;
+		std::cout << "----------------------------------------" << std::endl;
+
+		auto& table = management.pExam->getTable();
+		auto names = table | std::views::transform([](const auto& p) -> int { return dummyStrLenCalc(p.first->name); });
+		int nameLongest = *std::max_element(names.begin(), names.end());
+		auto ids = table | std::views::transform([](const auto& p) -> int { return p.first->id.size(); });
+		int idLongest = *std::max_element(ids.begin(), ids.end());
+
+		nameLongest = std::max(nameLongest, 4);
+		idLongest = std::max(idLongest, 4);
+
+		int idPos = 1 + nameLongest + 2;
+		int subjectPos = idPos + idLongest + 2;
+		auto& classes = ClassManager::getInstance().getClasses();
+		std::cout << "姓名" << con::cha(idPos) << "学号";
+
+		auto subjects = SubjectManager::getInstance().getSubjects();
+		for (auto& subject : subjects)
+		{
+			if (subject.empty())
+				continue;
+			std::cout << con::cha(subjectPos) << subject << ' ';
+			subjectPos += subjectWidth;
+		}
+		std::cout << std::endl;
+		
+		for (auto& pair : table)
+		{
+			std::cout << pair.first->name << con::cha(idPos) << pair.first->id;
+			subjectPos = idPos + idLongest + 2;
+			for (auto& score : pair.second)
+			{
+				if (subjects[&score - pair.second.data()].empty())
+					continue;
+
+				std::cout << con::cha(subjectPos);
+				if (score == -1.0f)
+					std::cout << "未参加";
+				else
+					std::cout << std::fixed << std::setprecision(2) << score;
+				subjectPos += subjectWidth;
+			}
+			std::cout << std::endl;
+		}
+
+		int subjectCnt = SubjectManager::getInstance().getSubjectCount();
+		std::vector<float> maxx(subjectCnt, std::numeric_limits<float>::min());
+		std::vector<float> minn(subjectCnt, std::numeric_limits<float>::max());
+		std::vector<float> avg(subjectCnt);
+		std::vector<int> validCount(subjectCnt);
+		for (auto& pair : table)
+		{
+			auto& scores = pair.second;
+			int idx = 0;
+			for (int j = 0; j < scores.size(); j++)
+			{
+				if (subjects[j].empty())
+					continue;
+				auto score = scores[j];
+				if (score == -1.0f)
+				{
+					idx++;
+					continue;
+				}
+				maxx[idx] = std::max(maxx[idx], score);
+				minn[idx] = std::min(minn[idx], score);
+				avg[idx] += score;
+				validCount[idx]++;
+				idx++;
+			}
+		}
+
+		auto printLine = [&](const std::string& name, const std::vector<int>& counts, const std::vector<float>& scores) -> void
+			{
+				int subjectPos = idPos + idLongest + 2;
+				std::cout << name;
+				for (int i = 0; i < subjectCnt; i++)
+				{
+					std::cout << con::cha(subjectPos);
+					if (counts[i] == 0)
+						std::cout << "无效";
+					else
+						std::cout << std::fixed << std::setprecision(2) << scores[i];
+					subjectPos += subjectWidth;
+				}
+				std::cout << std::endl;
+			};
+
+		std::cout << "----------------------------------------" << std::endl;
+		for (int i = 0; i < subjectCnt; i++)
+			avg[i] /= validCount[i];
+		printLine("平均分", validCount, avg);
+		printLine("最高分", validCount, maxx);
+		printLine("最低分", validCount, minn);
+
+		waitEnterPressed();
 	}
 
 	ExamScoreAddCommand::ExamScoreAddCommand(ExistingExamManagementCommand& management)
@@ -524,16 +641,97 @@ namespace esm
 		}
 		std::cout << con::textGreen << "√ 成绩添加成功" << con::textColorDefault << std::endl;
 		management.pExam->save();
-		// waitAnyKeyPressed();
 	}
 
-	ExamRecordUpdateCommand::ExamRecordUpdateCommand(std::shared_ptr<StudentInfo> pStudent, std::shared_ptr<ExamTable> pExam)
-		: Command("更新成绩"), pStudent{ pStudent }, pExam{ pExam } {}
-	void ExamRecordUpdateCommand::Invoke()
+	ExamScoreUpdateCommand::ExamScoreUpdateCommand(ExistingExamManagementCommand& management)
+		: Command("更新学生成绩"), management{ management }, studentSelectionCmd([this](auto pStu) { OnStudentSelected(pStu); }, nullptr) {}
+	void ExamScoreUpdateCommand::Invoke()
 	{
-		ENSURE(!(pExam == nullptr && pStudent == nullptr), "! 请先选择一次考试和一个学生");
-		ENSURE(pExam != nullptr, "! 请先选择一次考试");
-		ENSURE(pStudent != nullptr, "! 请先选择一个学生");
+		ENSURE(SubjectManager::getInstance().getSubjectCount() != 0, "! 请先添加课程");
+		ENSURE(management.pExam != nullptr, "! 请先选择一次考试");
+		studentSelectionCmd.Invoke();
+	}
+	void ExamScoreUpdateCommand::OnStudentSelected(std::shared_ptr<StudentInfo> pStu)
+	{
+		auto buildOption = [](const std::string& subject, const float score) -> std::string
+		{
+			if (score == -1.0f)
+				return std::format("{}：未参加", subject);
+			else
+				return std::format("{}：{:.2f}", subject, score);
+		};
+
+		if (pStu == nullptr)
+			return;
+		ENSURE(management.pExam->isStudentInTable(pStu), "! 该学生不存在考试记录，无法更新，请使用添加功能");
+
+		clearConsole();
+		auto& subjects = SubjectManager::getInstance().getSubjects();
+		std::vector<std::string> options;
+		std::vector<int> idMapping;
+		options.push_back("返回");
+		idMapping.push_back(-1);
+		for (int i = 0; i < subjects.size(); i++)
+		{
+			if (subjects[i].empty())
+				continue;
+			options.push_back(buildOption(subjects[i], management.pExam->getStudentScore(pStu, i)));
+			idMapping.push_back(i);
+		}
+		std::cout << "当前选中学生：" << pStu->name << "（" << pStu->id << "）" << std::endl;
+		std::cout << "请选中要修改的科目，按下回车后输入分数再按回车（-1也可以用来表示未参加考试）" << std::endl;
+		std::cout << "========================================" << std::endl;
+		int selecting = 0;
+		while (true)
+		{
+			int x, y;
+			con::getCursorPosition(x, y);
+			selecting = selectOption(options, selecting);
+			if (selecting == 0)
+				break;
+			con::setCursorPosition(x, y);
+
+			int x1 = 1, y1 = 1;
+			for (int i = 0; i < options.size(); i++)
+			{
+				if (i == selecting)
+				{
+					std::cout << con::textYellow << subjects[idMapping[i]] << "：" << con::textColorDefault;
+					con::getCursorPosition(x1, y1);
+					std::cout << std::endl;
+				}
+				else
+					std::cout << options[i] << std::endl;
+			}
+			con::setCursorPosition(x1, y1);
+
+			std::string input;
+			std::cin >> input;
+			con::setCursorPosition(x, y);
+
+			if (input == "-1" || input == "未参加")
+			{
+				management.pExam->setStudentScore(pStu, idMapping[selecting], -1.0f);
+				options[selecting] = buildOption(subjects[idMapping[selecting]], -1.0f);
+			}
+			else
+			{
+				float score = -1.0f;
+				try
+				{
+					score = std::stof(input);
+					management.pExam->setStudentScore(pStu, idMapping[selecting], score);
+					options[selecting] = buildOption(subjects[idMapping[selecting]], score);
+				}
+				catch (std::exception&)
+				{
+					continue;
+				}
+			}
+		}
+
+		management.pExam->save();
+		std::cout << con::textGreen << "√ 成绩更新成功" << con::textColorDefault << std::endl;
 	}
 
 	ExamManagementCommand::ExamManagementCommand() : Command("管理考试信息") {}

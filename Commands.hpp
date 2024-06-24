@@ -300,6 +300,17 @@ namespace esm
 		ExistingExamManagementCommand& management;
 	};
 
+	class ExamScorePrintCommand : public Command
+	{
+	public:
+		ExamScorePrintCommand(ExistingExamManagementCommand& management);
+
+		void Invoke() override;
+
+	private:
+		ExistingExamManagementCommand& management;
+	};
+
 	class ExamScoreAddCommand : public Command
 	{
 	public:
@@ -315,16 +326,18 @@ namespace esm
 		void OnStudentSelected(std::shared_ptr<StudentInfo> pStu);
 	};
 
-	class ExamRecordUpdateCommand : public Command
+	class ExamScoreUpdateCommand : public Command
 	{
 	public:
-		ExamRecordUpdateCommand(std::shared_ptr<StudentInfo> pStudent, std::shared_ptr<ExamTable> pExam);
+		ExamScoreUpdateCommand(ExistingExamManagementCommand& management);
 
 		void Invoke() override;
 
 	private:
-		std::shared_ptr<StudentInfo> pStudent;
-		std::shared_ptr<ExamTable> pExam;
+		ExistingExamManagementCommand& management;
+		StudentSelectionCommand studentSelectionCmd;
+
+		void OnStudentSelected(std::shared_ptr<StudentInfo> pStua);
 	};
 
 	class ExamManagementCommand : public Command
