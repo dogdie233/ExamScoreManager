@@ -9,6 +9,8 @@
 
 namespace con
 {
+	static HANDLE stdinHandle = GetStdHandle(STD_INPUT_HANDLE);
+
 	void initConsole()
 	{
 		DWORD mode;

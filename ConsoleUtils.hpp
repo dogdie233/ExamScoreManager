@@ -3,13 +3,10 @@
 #ifndef ESM_CONSOLEUTILS_HPP
 #define ESM_CONSOLEUTILS_HPP
 
-#include <Windows.h>
 #include <iostream>
 
 namespace con
 {
-	static HANDLE stdinHandle = GetStdHandle(STD_INPUT_HANDLE);
-
 	void initConsole();
 
 	void getCursorPosition(int& x, int& y);
