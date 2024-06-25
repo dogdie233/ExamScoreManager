@@ -1,3 +1,5 @@
+// 在控制台中读取utf8参考了 https://chariri.moe/archives/408/windows-cin-read-utf8/
+
 #pragma once
 
 #ifndef ESM_CONSOLEUTILS_HPP
@@ -7,6 +9,24 @@
 
 namespace con
 {
+	constexpr unsigned default_win_utf8_cin_buf_size = 2048;
+
+	class WinUtf8StreamBuf : public std::streambuf
+	{
+	public:
+		WinUtf8StreamBuf(unsigned read_buf_size = default_win_utf8_cin_buf_size, bool handle_console_eof = false);
+
+	protected:
+		int_type underflow() override;
+
+	private:
+		unsigned _read_buf_size, _u8_buf_size, _wide_buf_size;
+		std::unique_ptr<char[]> _buffer;
+		std::unique_ptr<wchar_t[]> _wide_buffer;
+
+		bool _handle_eof, _eof = false;
+	};
+
 	void initConsole();
 
 	void getCursorPosition(int& x, int& y);

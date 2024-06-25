@@ -37,7 +37,7 @@ int main()
 	std::cout << "考试信息加载" << (ExamManager::getInstance().load() ? "成功" : "失败") << std::endl;
 	for (auto& exam : ExamManager::getInstance().getExams())
 		exam.second->load();
-	waitAnyKeyPressed();
+	// waitAnyKeyPressed();
 
 	addMain();
 	while (!Navigator::getInstance().getAll().empty())

@@ -35,11 +35,6 @@ namespace csv
             }
             dest += c;
         } while (input.get(c));
-
-        // 如果在引号内部结束，需要跳过结尾的引号
-        if (isInQuote && c == '"') {
-            // 可以在这里处理结尾的引号，如果需要的话
-        }
     }
 
     void CsvHelper::solveDeliver(std::istream& input)
@@ -84,9 +79,8 @@ namespace csv
             return *this;
         }
 
-        std::string str;
-        CsvHelper::readCsvString(*input, str);
-        num = std::stoi(str);
+        *input >> num;
+        CsvHelper::solveDeliver(*input);
         return *this;
     }
 
@@ -98,9 +92,8 @@ namespace csv
             return *this;
         }
 
-        std::string str;
-        CsvHelper::readCsvString(*input, str);
-        num = std::stof(str);
+        *input >> num;
+        CsvHelper::solveDeliver(*input);
         return *this;
     }
 
@@ -119,7 +112,7 @@ namespace csv
     {
         if (!isNewLine)
             *output << ',';
-        *output << std::to_string(num);
+        *output << num;
         isNewLine = false;
         return *this;
     }
@@ -128,7 +121,7 @@ namespace csv
     {
         if (!isNewLine)
             *output << ',';
-        *output << std::fixed << std::to_string(num);
+        *output << std::fixed << num;
         isNewLine = false;
         return *this;
     }

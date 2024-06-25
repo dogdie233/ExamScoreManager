@@ -22,7 +22,8 @@ namespace esm
 		exam->title = title;
 		exams.insert(std::make_pair(id, exam));
 		save();
-		return exams[exams.size() - 1];
+		exams[id]->save();
+		return exams[id];
 	}
 
 	void ExamManager::removeExam(const int id)
