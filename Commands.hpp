@@ -300,6 +300,17 @@ namespace esm
 		ExistingExamManagementCommand& management;
 	};
 
+	class ExamSubjectUpdateCommand : public Command
+	{
+	public:
+		ExamSubjectUpdateCommand(ExistingExamManagementCommand& management);
+
+		void Invoke() override;
+
+	private:
+		ExistingExamManagementCommand& management;
+	};
+
 	class ExamScorePrintCommand : public Command
 	{
 	public:
@@ -311,25 +322,21 @@ namespace esm
 		ExistingExamManagementCommand& management;
 	};
 
-	class ExamScoreAddCommand : public Command
+	class ExamScoreAddBatchCommand : public Command
 	{
 	public:
-		ExamScoreAddCommand(ExistingExamManagementCommand& management);
+		ExamScoreAddBatchCommand(ExistingExamManagementCommand& management);
 
 		void Invoke() override;
 		
 	private:
 		ExistingExamManagementCommand& management;
-		StudentSelectionCommand studentSelectionCmd;
-		std::shared_ptr<StudentInfo> pStu;
-
-		void OnStudentSelected(std::shared_ptr<StudentInfo> pStu);
 	};
 
-	class ExamScoreUpdateCommand : public Command
+	class ExamScoreUpdateOrCreateCommand : public Command
 	{
 	public:
-		ExamScoreUpdateCommand(ExistingExamManagementCommand& management);
+		ExamScoreUpdateOrCreateCommand(ExistingExamManagementCommand& management);
 
 		void Invoke() override;
 

@@ -3,7 +3,7 @@
 #ifndef ESM_SUBJECTMANAGER_HPP
 #define ESM_SUBJECTMANAGER_HPP
 
-#include <vector>
+#include <map>
 #include <string>
 #include "PersistentData.hpp"
 
@@ -12,32 +12,30 @@ namespace esm
 	class SubjectManager : public PersistentDataSavable
 	{
 	public:
-		static SubjectManager& getInstance();
+		static SubjectManager& getInstance() noexcept;
 
-		std::vector<std::string>& getSubjects();
+		std::map<int, std::string>& getSubjects() noexcept;
 
-		int getSubjectId(const std::string& name);
+		int getSubjectId(const std::string& name) noexcept;
 
-		const std::string& getSubjectName(const int id);
+		const std::string& getSubjectName(const int id) noexcept;
 
-		int addSubject(const std::string& name);
+		int addSubject(const std::string& name) noexcept;
 
 		bool renameSubject(const int id, const std::string& name);
 
-		void removeSubject(const int id);
+		void removeSubject(const int id) noexcept;
 
-		int addSubject(std::string&& name);
+		int addSubject(std::string&& name) noexcept;
 
-		bool isSubjectExist(int id);
-
-		int getSubjectCount();
+		bool isSubjectExist(int id) noexcept;
 
 		bool save() override;
 
 		bool load() override;
 
 	private:
-		std::vector<std::string> subjects;
+		std::map<int, std::string> subjects;
 
 		SubjectManager() : PersistentDataSavable("data/subjects.csv") {}
 		~SubjectManager() = default;

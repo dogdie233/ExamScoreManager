@@ -47,6 +47,8 @@ namespace con
 
 	std::ostream& textYellow(std::ostream& _Ostr);
 
+	std::ostream& textOrange(std::ostream& _Ostr);
+
 	std::ostream& textBold(std::ostream& _Ostr);
 
 	std::ostream& textColorDefault(std::ostream& _Ostr);

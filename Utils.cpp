@@ -102,6 +102,69 @@ namespace esm
 		breadcrumb.getCommands()[breadcrumb.selecting]->Invoke();
 	}
 
+	int selectMultiOptions(const std::vector<std::string>& options, std::vector<bool>& selections, int focusing)
+	{
+		if (options.size() != selections.size())
+			throw std::runtime_error("Size of options and selections not match.");
+
+		std::cout << con::cha(1) << std::flush;
+		int x, y;
+		con::getCursorPosition(x, y);
+		con::hideCursor();
+		bool confirm = false;
+		int optionsCount = options.size() + 1;
+		while (!confirm)
+		{
+			for (int i = 0; i < options.size(); i++)
+			{
+				std::cout << con::lineClear;
+				if (focusing == i)
+					std::cout << con::textGreen;
+				std::cout << (selections[i] ? "√ " : "  ") << options[i];
+				if (focusing == i)
+					std::cout << con::textColorDefault;
+				std::cout << '\n';
+			}
+			if (focusing == optionsCount - 1)
+				std::cout << con::textGreen << "确认" << con::textColorDefault << std::endl;
+			else
+				std::cout << "确认" << std::endl;
+			con::setCursorPosition(x, y);
+
+			while (1)
+			{
+				int key = _getch();
+				if (key == 13)
+				{
+					if (focusing == optionsCount - 1)
+						confirm = true;
+					else
+						selections[focusing] = !selections[focusing];
+					break;
+				}
+				if (key != 224)
+					continue;
+				key = _getch();
+				if (key == 72)
+				{
+					focusing = (focusing - 1 + optionsCount) % optionsCount;
+					break;
+				}
+				else if (key == 80)
+				{
+					focusing = (focusing + 1) % optionsCount;
+					break;
+				}
+			}
+		}
+
+		for (int i = 0; i < optionsCount; i++)
+			std::cout << con::lineClear << '\n';
+		con::setCursorPosition(x, y);
+		con::showCursor();
+		return focusing;
+	}
+
 	int selectOption(const std::vector<std::string>& options, int selecting)
 	{
 		std::cout << con::cha(1) << std::flush;
@@ -157,24 +220,6 @@ namespace esm
 	{
 		system("cls");
 	}
-
-	int stringCount(const std::string& str, const std::string& pattern)
-	{
-		int count = 0;
-		size_t pos = 0;
-		while ((pos = str.find(pattern, pos)) != std::string::npos)
-		{
-			++count;
-			pos += pattern.length();
-		}
-		return count;
-	}
-
-	int dummyStrLenCalc(const std::string& str)
-	{
-		int len = str.size() - stringCount(str, "·");
-		return len;
-	}
 	
 	bool CreateCsvWriterSafe(const PersistentData& persistentData, csv::CsvWriter& writer)
 	{
@@ -212,7 +257,10 @@ namespace esm
 	{
 		char otp = rand() % 26 + 'a';
 
-		std::cout << con::textYellow << "你正在执行删除" << itemType << "操作" << std::endl;
+		std::cout << con::textYellow << "你正在执行删除" << itemType << "操作";
+		if (!itemName.empty())
+			std::cout << "，对象为\"" << itemName << "\"";
+		std::cout << std::endl;
 		std::cout << "这项操作十分重要，会造成重大影响且不可恢复，确定要执行吗？" << std::endl;
 		std::cout << "确定请输入 " << con::textBold << otp << con::textColorDefault << ": ";
 		char input;
@@ -220,7 +268,7 @@ namespace esm
 		std::cin.clear();
 
 		if (input == otp)
-			std::cout << con::textGreen << "√ 正在执行删除操作..." << con::textColorDefault << std::endl;
+			std::cout << con::textGreen << "√ 操作已确认，正在执行删除操作..." << con::textColorDefault << std::endl;
 		else
 			std::cout << con::textRed << "× 已取消删除操作" << con::textColorDefault << std::endl;
 		return input == otp;

@@ -160,6 +160,12 @@ namespace con
 		return _Ostr;
 	}
 
+	std::ostream& textOrange(std::ostream& _Ostr)
+	{
+		_Ostr << "\033[38;5;208m";
+		return _Ostr;
+	}
+
 	std::ostream& textBold(std::ostream& _Ostr)
 	{
 		_Ostr << "\033[1m";

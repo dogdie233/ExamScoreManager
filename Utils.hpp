@@ -23,13 +23,29 @@ namespace esm
 
 	void printCommands(Breadcrumb& breadcrumb);
 
+	int selectMultiOptions(const std::vector<std::string>& options, std::vector<bool>& selections, int focusing = 0);
+
 	int selectOption(const std::vector<std::string>& options, int selecting = 0);
 
 	void clearConsole();
 
-	int stringCount(const std::string& str, const std::string& pattern);
+	constexpr int stringCount(const std::string& str, const std::string& pattern)
+	{
+		int count = 0;
+		size_t pos = 0;
+		while ((pos = str.find(pattern, pos)) != std::string::npos)
+		{
+			++count;
+			pos += pattern.length();
+		}
+		return count;
+	}
 
-	int dummyStrLenCalc(const std::string& str);
+	constexpr int dummyStrLenCalc(const std::string& str)
+	{
+		int len = str.size() - stringCount(str, "·");
+		return len;
+	}
 
 	bool CreateCsvWriterSafe(const PersistentData& persistentData, csv::CsvWriter& writer);
 	

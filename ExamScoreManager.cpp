@@ -20,7 +20,7 @@ namespace esm
 		breadcrumb.addCommand(std::make_unique<SubjectManagementCommand>());
 		breadcrumb.addCommand(std::make_unique<StudentManagementCommand>());
 		breadcrumb.addCommand(std::make_unique<ExamManagementCommand>());
-		breadcrumb.addCommand(std::make_unique<TestCommand>("测试", 1));
+		// breadcrumb.addCommand(std::make_unique<TestCommand>("测试", 1));
 		Navigator::getInstance().push(std::move(breadcrumb));
 	}
 }

@@ -2,6 +2,7 @@
 
 #include <map>
 #include <string>
+#include <sstream>
 #include <stdexcept>
 #include "Student.hpp"
 #include "Utils.hpp"
@@ -18,7 +19,7 @@ namespace esm
 	{
 		if (exams.find(id) != exams.end())
 			throw std::runtime_error("Exam id already exists.");
-		auto exam = std::make_shared<ExamTable>(ExamTable(id));
+		auto exam = std::make_shared<ExamTable>(ExamTable(id, title));
 		exam->title = title;
 		exams.insert(std::make_pair(id, exam));
 		save();
@@ -66,7 +67,14 @@ namespace esm
 			return false;
 
 		for (auto& kvp : exams)
-			writer << kvp.first << kvp.second->title << csv::endl;
+		{
+			std::stringstream ss;
+			if (kvp.second->subjects.size() > 0)
+				ss << kvp.second->subjects[0];
+			for (int i = 1; i < kvp.second->subjects.size(); i++)
+				ss << ',' << kvp.second->subjects[i];
+			writer << kvp.first << kvp.second->title << ss.str() << csv::endl;
+		}
 		return true;
 	}
 
@@ -80,9 +88,20 @@ namespace esm
 		while (reader.hasNext())
 		{
 			int id;
-			std::string title;
-			reader >> id >> title;
-			exams.insert(std::make_pair(id, std::make_shared<ExamTable>(ExamTable(id, title))));
+			std::string title, subjects;
+			reader >> id >> title >> subjects;
+			std::stringstream ss(subjects);
+			std::vector<int> subjectIds;
+			while (!ss.eof())
+			{
+				if (ss.peek() == ',')
+					ss.ignore(1);
+				int subjectId;
+				ss >> subjectId;
+				subjectIds.push_back(subjectId);
+			}
+
+			exams.insert(std::make_pair(id, std::make_shared<ExamTable>(ExamTable(id, std::move(subjectIds), title))));
 		}
 		return true;
 	}

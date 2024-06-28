@@ -1,9 +1,11 @@
-#include <format>
 #include "ExamTable.hpp"
+
 #include "Utils.hpp"
 #include "StudentManager.hpp"
 #include "ExamManager.hpp"
 #include "SubjectManager.hpp"
+
+#include <format>
 
 namespace esm
 {
@@ -11,6 +13,8 @@ namespace esm
 	ExamTable::ExamTable(const int id) : ExamTable(id, std::format("未命名考试{}", id)) {}
 	ExamTable::ExamTable(const int id, const std::string& title)
 		: id(id), title(title), PersistentDataSavable(std::format("data/exam_{}.csv", id)) {}
+	ExamTable::ExamTable(const int id, std::vector<int>&& subjects, const std::string& title)
+		: id(id), title(title), subjects{ std::move(subjects) }, PersistentDataSavable(std::format("data/exam_{}.csv", id)) {}
 
 	bool ExamTable::save()
 	{
@@ -20,8 +24,8 @@ namespace esm
 
 		for (auto& pair : table)
 		{
-			writer << pair.first->id;
-			for (auto& score : pair.second)
+			writer << pair.pStudent->id;
+			for (auto& score : pair.scores)
 				writer << score;
 			writer << csv::endl;
 		}
@@ -43,24 +47,11 @@ namespace esm
 		{
 			std::string id;
 			reader >> id;
-			std::vector<float> scores;
-			std::string line;
-			*reader.input >> line;
-
-			size_t start = 0;
-			while (start < line.size())
-			{
-				float score;
-				auto end = line.find(',', start);
-				if (end == std::string::npos)
-					end = line.size();
-				score = std::stof(line.substr(start, end - start));
-				scores.push_back(score);
-				start = end + 1;
-			}
-
+			std::vector<float> scores(subjects.size());
+			for (int i = 0; i < subjects.size(); i++)
+				reader >> scores[i];
 			auto pStu = StudentManager::getInstance().getStudentById(id);
-			table.push_back(std::make_pair(std::move(pStu), scores));
+			table.push_back(ExamScoreRecord(pStu, std::move(scores)));
 		}
 		return true;
 	}
@@ -73,37 +64,33 @@ namespace esm
 		std::vector<float>* pScores = nullptr;
 		for (auto& pair : table)
 		{
-			if (pair.first == pStudent)
+			if (pair.pStudent == pStudent)
 			{
-				pScores = &pair.second;
+				pScores = &pair.scores;
 				break;
 			}
 		}
 		if (pScores == nullptr)
 		{
-			table.push_back(std::make_pair(pStudent, std::vector<float>(SubjectManager::getInstance().getSubjectCount())));
-			pScores = &table.rbegin()->second;
-			for (auto& score : *pScores)
-				score = -1;
+			table.push_back(ExamScoreRecord(pStudent, std::vector<float>(subjects.size(), -1)));
+			pScores = &table.rbegin()->scores;
 		}
-		while (pScores->size() <= subjectId)
-			pScores->push_back(-1);
-		(*pScores)[subjectId] = score;
+		auto subjectIndex = find(subjects.begin(), subjects.end(), subjectId) - subjects.begin();
+		(*pScores)[subjectIndex] = score;
 	}
 
 	float ExamTable::getStudentScore(const std::shared_ptr<StudentInfo>& pStudent, int subjectId) const
 	{
-		if (pStudent == nullptr || !SubjectManager::getInstance().isSubjectExist(subjectId))
+		if (pStudent == nullptr)
 			return -1;
 
+		int subjectIndex = find(subjects.begin(), subjects.end(), subjectId) - subjects.begin();
+		if (subjectIndex >= subjects.size())
+			return -1;
 		for (auto& pair : table)
 		{
-			if (pair.first == pStudent)
-			{
-				if (pair.second.size() <= subjectId)
-					return -1;
-				return pair.second[subjectId];
-			}
+			if (pair.pStudent == pStudent)
+				return pair.scores[subjectIndex];
 		}
 		return -1;
 	}
@@ -115,19 +102,31 @@ namespace esm
 
 		for (auto& pair : table)
 		{
-			if (pair.first == student)
+			if (pair.pStudent == student)
 				return true;
 		}
 		return false;
 	}
 
+	void ExamTable::addSubject(int subjectId)
+	{
+		if (!SubjectManager::getInstance().isSubjectExist(subjectId))
+			return;
+
+		subjects.push_back(subjectId);
+		for (auto& record : table)
+			record.scores.push_back(-1);
+	}
+
 	void ExamTable::removeSubject(int subjectId)
 	{
-		for (auto& pair : table)
-		{
-			if (pair.second.size() > subjectId)
-				pair.second[subjectId] = -1;
-		}
+		int index = find(subjects.begin(), subjects.end(), subjectId) - subjects.begin();
+		if (index >= subjects.size())
+			return;
+
+		subjects.erase(subjects.begin() + index);
+		for (auto& record : table)
+			record.scores.erase(record.scores.begin() + index);
 	}
 
 	bool ExamTable::removeStudent(std::shared_ptr<StudentInfo> pStu) noexcept
@@ -137,7 +136,7 @@ namespace esm
 
 		for (auto it = table.cbegin(); it < table.cend(); it++)
 		{
-			if (it->first != pStu)
+			if (it->pStudent != pStu)
 				continue;
 
 			table.erase(it);
@@ -146,7 +145,7 @@ namespace esm
 		return false;
 	}
 
-	std::vector<std::pair<std::shared_ptr<StudentInfo>, std::vector<float>>>& ExamTable::getTable() noexcept
+	std::vector<ExamScoreRecord>& ExamTable::getTable() noexcept
 	{
 		return table;
 	}
