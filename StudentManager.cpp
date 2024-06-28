@@ -1,6 +1,7 @@
 #pragma once
 #include "StudentManager.hpp"
 
+#include <algorithm>
 #include <regex>
 #include <vector>
 #include <memory>
@@ -39,7 +40,9 @@ namespace esm
 
 	void StudentManager::addStudent(const StudentInfo& student)
 	{
-		students.push_back(std::make_shared<StudentInfo>(StudentInfo(student)));
+		auto pStudent = std::make_shared<StudentInfo>(StudentInfo(student));
+		auto next = std::upper_bound(students.begin(), students.end(), pStudent, defaultStudentPtrComparator);
+		students.insert(next, std::move(pStudent));
 		save();
 	}
 
@@ -78,6 +81,7 @@ namespace esm
 			reader >> stu.id >> stu.name >> stu.gender >> stu.classId;
 			students.push_back(std::make_shared<StudentInfo>(stu));
 		}
+		std::sort(students.begin(), students.end(), defaultStudentPtrComparator);
 		return true;
 	}
 }

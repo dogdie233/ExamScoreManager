@@ -37,6 +37,8 @@ namespace con
 
 	void showCursor();
 
+	void fillCharToEnd(char c);
+
 	std::ostream& lineClear(std::ostream& _Ostr);
 
 	std::ostream& textGreen(std::ostream& _Ostr);

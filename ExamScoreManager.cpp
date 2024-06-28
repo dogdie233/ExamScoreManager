@@ -31,12 +31,12 @@ int main()
 {
 	con::initConsole();
 
-	std::cout << "科目信息加载" << (SubjectManager::getInstance().load() ? "成功" : "失败") << std::endl;
-	std::cout << "班级信息加载" << (ClassManager::getInstance().load() ? "成功" : "失败") << std::endl;
-	std::cout << "学生信息加载" << (StudentManager::getInstance().load() ? "成功" : "失败") << std::endl;
-	std::cout << "考试信息加载" << (ExamManager::getInstance().load() ? "成功" : "失败") << std::endl;
+	std::cout << "科目信息加载中..." << (SubjectManager::getInstance().load() ? "成功" : "失败") << std::endl;
+	std::cout << "班级信息加载中..." << (ClassManager::getInstance().load() ? "成功" : "失败") << std::endl;
+	std::cout << "学生信息加载中..." << (StudentManager::getInstance().load() ? "成功" : "失败") << std::endl;
+	std::cout << "考试信息加载中..." << (ExamManager::getInstance().load() ? "成功" : "失败") << std::endl;
 	for (auto& exam : ExamManager::getInstance().getExams())
-		exam.second->load();
+		std::cout << "考试" << exam.first << "加载中..." << (exam.second->load() ? "成功" : "失败") << std::endl;
 	// waitAnyKeyPressed();
 
 	addMain();

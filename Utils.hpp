@@ -11,6 +11,8 @@
 
 namespace esm
 {
+	struct StudentInfo;
+
 	class Breadcrumb;
 
 	void waitEnterPressed();
@@ -34,5 +36,9 @@ namespace esm
 	bool CreateCsvReaderSafe(const PersistentData& persistentData, csv::CsvReader& writer);
 
 	bool ConfirmDeleteAction(const std::string& itemType, const std::string& itemName);
+
+	bool defaultStudentPtrComparator(const std::shared_ptr<StudentInfo>& lhs, const std::shared_ptr<StudentInfo>& rhs);
+
+	bool defaultStudentComparator(const std::shared_ptr<StudentInfo>& lhs, const StudentInfo& rhs);
 }
 #endif

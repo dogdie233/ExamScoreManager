@@ -1,8 +1,11 @@
 #include "Utils.hpp"
+
 #include "Breadcrumb.hpp"
 #include "Command.hpp"
 #include "ConsoleUtils.hpp"
 #include "Navigator.hpp"
+#include "Student.hpp"
+
 #include <iostream>
 #include <list>
 #include <conio.h>
@@ -49,7 +52,8 @@ namespace esm
 		bool confirm = false;
 		while (!confirm)
 		{
-			std::cout << con::lineClear << "================\n";
+			std::cout << con::lineClear << std::flush;
+			con::fillCharToEnd('=');
 			auto iter = breadcrumb.getCommands().begin();
 			int id = 0;
 			while (iter != breadcrumb.getCommands().end())
@@ -64,7 +68,8 @@ namespace esm
 				++iter;
 				++id;
 			}
-			std::cout << con::lineClear << "================\n";
+			std::cout << con::lineClear << std::flush;
+			con::fillCharToEnd('=');
 			std::cout << con::lineClear << "通过↑↓方向键选择命令，回车键执行当前选中命令（绿色）" << std::endl;
 
 			while (1)
@@ -205,19 +210,29 @@ namespace esm
 
 	bool ConfirmDeleteAction(const std::string& itemType, const std::string& itemName)
 	{
-		std::cout << con::textYellow << "? 你确定要删除" << itemType << '"' << itemName << "\"吗" << con::textColorDefault << std::endl;
-		waitEnterPressed();
-		std::cout << con::textYellow << "? 你真的要删除" << itemType << '"' << itemName << "\"吗" << con::textColorDefault << std::endl;
-		waitEnterPressed();
-		std::cout << "如果确认删除请输入\"" << itemName << "\"：";
-		std::string input;
+		char otp = rand() % 26 + 'a';
+
+		std::cout << con::textYellow << "你正在执行删除" << itemType << "操作" << std::endl;
+		std::cout << "这项操作十分重要，会造成重大影响且不可恢复，确定要执行吗？" << std::endl;
+		std::cout << "确定请输入 " << con::textBold << otp << con::textColorDefault << ": ";
+		char input;
 		std::cin >> input;
-		if (input != itemName)
-		{
-			std::cout << con::textRed << "! 删除操作取消，输入不匹配" << con::textColorDefault << std::endl;
-			return false;
-		}
-		std::cout << con::textGreen << "√ 删除成功" << con::textColorDefault << std::endl;
-		return true;
+		std::cin.clear();
+
+		if (input == otp)
+			std::cout << con::textGreen << "√ 正在执行删除操作..." << con::textColorDefault << std::endl;
+		else
+			std::cout << con::textRed << "× 已取消删除操作" << con::textColorDefault << std::endl;
+		return input == otp;
+	}
+
+	bool defaultStudentPtrComparator(const std::shared_ptr<StudentInfo>& lhs, const std::shared_ptr<StudentInfo>& rhs)
+	{
+		return lhs->classId < rhs->classId || (lhs->classId == rhs->classId && lhs->id < rhs->id);
+	}
+
+	bool defaultStudentComparator(const std::shared_ptr<StudentInfo>& lhs, const StudentInfo& rhs)
+	{
+		return lhs->classId < rhs.classId || (lhs->classId == rhs.classId && lhs->id < rhs.id);
 	}
 }

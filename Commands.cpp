@@ -1,6 +1,8 @@
+#include <algorithm>
 #include <format>
 #include <limits>
 #include <iomanip>
+#include <vector>
 
 #include "Commands.hpp"
 #include "Breadcrumb.hpp"
@@ -158,7 +160,9 @@ namespace esm
 			ExamManager::getInstance().removeSubject(management.selectedSubjectId);
 			SubjectManager::getInstance().removeSubject(management.selectedSubjectId);
 			Navigator::getInstance().pop();
+			std::cout << con::textGreen << "√ 删除完成" << con::textColorDefault << std::endl;
 		}
+		std::cout << "按任意键返回..." << std::endl;
 		waitAnyKeyPressed();
 	}
 
@@ -361,7 +365,9 @@ namespace esm
 			StudentManager::getInstance().removeStudent(std::move(management.selectedStudentPtr));
 			management.selectedStudentPtr = nullptr;
 			Navigator::getInstance().pop();
+			std::cout << con::textGreen << "√ 删除完成" << con::textColorDefault << std::endl;
 		}
+		std::cout << "按任意键返回..." << std::endl;
 		waitAnyKeyPressed();
 	}
 
@@ -488,7 +494,9 @@ namespace esm
 			ExamManager::getInstance().removeExam(management.pExam->id);
 			management.pExam = nullptr;
 			Navigator::getInstance().pop();
+			std::cout << con::textGreen << "√ 删除完成" << con::textColorDefault << std::endl;
 		}
+		std::cout << "按任意键返回..." << std::endl;
 		waitAnyKeyPressed();
 	}
 
@@ -496,23 +504,30 @@ namespace esm
 		: Command("打印本次考试所有成绩"), management{ management } {}
 	void ExamScorePrintCommand::Invoke()
 	{
+		using StudentScorePair = std::pair<std::shared_ptr<StudentInfo>, std::vector<float>>;
 		const int subjectWidth = 16;
 
 		ENSURE(management.pExam != nullptr, "! 请先选择一次考试");
 		clearConsole();
 		std::cout << "考试名称：" << management.pExam->title << "    ID：" << management.pExam->id << std::endl;
-		std::cout << "----------------------------------------" << std::endl;
+		con::fillCharToEnd('-');
 
 		auto& table = management.pExam->getTable();
-		auto names = table | std::views::transform([](const auto& p) -> int { return dummyStrLenCalc(p.first->name); });
+		std::vector<StudentScorePair> sortedTable(table.begin(), table.end());
+		std::sort(sortedTable.begin(), sortedTable.end(), [](StudentScorePair& lhs, StudentScorePair& rhs)
+			{
+				return lhs.first->id < rhs.first->id;
+				return defaultStudentPtrComparator(lhs.first, rhs.first);
+			});
+		auto names = sortedTable | std::views::transform([](const auto& p) -> int { return dummyStrLenCalc(p.first->name); });
 		int nameLongest = *std::max_element(names.begin(), names.end());
-		auto ids = table | std::views::transform([](const auto& p) -> int { return p.first->id.size(); });
+		auto ids = sortedTable | std::views::transform([](const auto& p) -> int { return p.first->id.size(); });
 		int idLongest = *std::max_element(ids.begin(), ids.end());
 
 		nameLongest = std::max(nameLongest, 4);
 		idLongest = std::max(idLongest, 4);
 
-		int idPos = 1 + nameLongest + 2;
+		const int idPos = 1 + nameLongest + 2;
 		int subjectPos = idPos + idLongest + 2;
 		auto& classes = ClassManager::getInstance().getClasses();
 		std::cout << "姓名" << con::cha(idPos) << "学号";
@@ -527,15 +542,16 @@ namespace esm
 		}
 		std::cout << std::endl;
 		
-		for (auto& pair : table)
+		for (auto& pair : sortedTable)
 		{
 			std::cout << pair.first->name << con::cha(idPos) << pair.first->id;
 			subjectPos = idPos + idLongest + 2;
-			for (auto& score : pair.second)
+			for (int i = 0; i < subjects.size(); i++)
 			{
-				if (subjects[&score - pair.second.data()].empty())
+				if (subjects[i].empty())
 					continue;
 
+				auto score = i < pair.second.size() ? pair.second[i] : -1;
 				std::cout << con::cha(subjectPos);
 				if (score == -1.0f)
 					std::cout << "未参加";
@@ -551,7 +567,7 @@ namespace esm
 		std::vector<float> minn(subjectCnt, std::numeric_limits<float>::max());
 		std::vector<float> avg(subjectCnt);
 		std::vector<int> validCount(subjectCnt);
-		for (auto& pair : table)
+		for (auto& pair : sortedTable)
 		{
 			auto& scores = pair.second;
 			int idx = 0;
@@ -589,7 +605,7 @@ namespace esm
 				std::cout << std::endl;
 			};
 
-		std::cout << "----------------------------------------" << std::endl;
+		con::fillCharToEnd('-');
 		for (int i = 0; i < subjectCnt; i++)
 			avg[i] /= validCount[i];
 		printLine("平均分", validCount, avg);

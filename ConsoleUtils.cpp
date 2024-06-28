@@ -129,6 +129,13 @@ namespace con
 		std::cout << "\033[?25h" << std::flush;
 	}
 
+	void fillCharToEnd(char c)
+	{
+		CONSOLE_SCREEN_BUFFER_INFO csbi;
+		GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+		std::cout << std::string(csbi.dwSize.X - csbi.dwCursorPosition.X, c) << std::endl;
+	}
+
 	std::ostream& lineClear(std::ostream& _Ostr)
 	{
 		_Ostr << "\033[2K";
