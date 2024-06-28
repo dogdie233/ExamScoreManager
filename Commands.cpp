@@ -513,6 +513,13 @@ namespace esm
 		con::fillCharToEnd('-');
 
 		auto& table = management.pExam->getTable();
+		if (table.size() == 0)
+		{
+			std::cout << "无学生参加考试" << std::endl;
+			waitEnterPressed();
+			return;
+		}
+
 		std::vector<StudentScorePair> sortedTable(table.begin(), table.end());
 		std::sort(sortedTable.begin(), sortedTable.end(), [](StudentScorePair& lhs, StudentScorePair& rhs)
 			{
