@@ -136,6 +136,11 @@ namespace con
 		std::cout << std::string(csbi.dwSize.X - csbi.dwCursorPosition.X, c) << std::endl;
 	}
 
+	std::ostream& nop(std::ostream& _Ostr)
+	{
+		return _Ostr;
+	}
+
 	std::ostream& lineClear(std::ostream& _Ostr)
 	{
 		_Ostr << "\033[2K";

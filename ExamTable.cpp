@@ -25,8 +25,8 @@ namespace esm
 		for (auto& pair : table)
 		{
 			writer << pair.pStudent->id;
-			for (auto& score : pair.scores)
-				writer << score;
+			for (int i = 0; i < pair.scores.size() - 1; i++)
+				writer << pair.scores[i];
 			writer << csv::endl;
 		}
 		return true;
@@ -47,9 +47,15 @@ namespace esm
 		{
 			std::string id;
 			reader >> id;
-			std::vector<float> scores(subjects.size());
+			std::vector<float> scores(subjects.size() + 1);
+			float sum = 0;
 			for (int i = 0; i < subjects.size(); i++)
+			{
 				reader >> scores[i];
+				if (scores[i] != -1.0f)
+					sum += scores[i];
+			}
+			*scores.rbegin() = sum;
 			auto pStu = StudentManager::getInstance().getStudentById(id);
 			table.push_back(ExamScoreRecord(pStu, std::move(scores)));
 		}
@@ -72,8 +78,9 @@ namespace esm
 		}
 		if (pScores == nullptr)
 		{
-			table.push_back(ExamScoreRecord(pStudent, std::vector<float>(subjects.size(), -1)));
+			table.push_back(ExamScoreRecord(pStudent, std::vector<float>(subjects.size() + 1, -1)));
 			pScores = &table.rbegin()->scores;
+			*pScores->rbegin() = 0;
 		}
 		auto subjectIndex = find(subjects.begin(), subjects.end(), subjectId) - subjects.begin();
 		(*pScores)[subjectIndex] = score;
@@ -115,7 +122,7 @@ namespace esm
 
 		subjects.push_back(subjectId);
 		for (auto& record : table)
-			record.scores.push_back(-1);
+			record.scores.insert(record.scores.end() - 1, -1.0f);
 	}
 
 	void ExamTable::removeSubject(int subjectId)

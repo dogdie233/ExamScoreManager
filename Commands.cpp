@@ -610,6 +610,14 @@ namespace esm
 		waitAnyKeyPressed();
 	}
 
+	struct Sheet
+	{
+		const std::string title;
+		int start, end;
+
+		Sheet(std::string title, int start, int end) : title{ title }, start(start), end(end) {}
+	};
+
 	ExamScorePrintCommand::ExamScorePrintCommand(ExistingExamManagementCommand& management)
 		: Command("打印本次考试所有成绩"), management{ management } {}
 	void ExamScorePrintCommand::Invoke()
@@ -619,108 +627,150 @@ namespace esm
 		ENSURE(management.pExam != nullptr, "! 请先选择一场考试");
 		clearConsole();
 		std::cout << "考试名称：" << management.pExam->title << "    ID：" << management.pExam->id << std::endl;
-		con::fillCharToEnd('-');
+		con::fillCharToEnd('=');
 
 		auto& table = management.pExam->getTable();
+		auto& classes = ClassManager::getInstance().getClasses();
+		auto& subjectIds = management.pExam->subjects;
 		if (table.size() == 0)
 		{
 			std::cout << "无学生参加考试" << std::endl;
 			waitEnterPressed();
 			return;
 		}
-
 		std::vector<ExamScoreRecord> sortedTable(table.begin(), table.end());
 		std::sort(sortedTable.begin(), sortedTable.end(), [](ExamScoreRecord& lhs, ExamScoreRecord& rhs)
 			{
-				return lhs.pStudent->id < rhs.pStudent->id;
+				return lhs.pStudent->classId < rhs.pStudent->classId || (lhs.pStudent->classId == rhs.pStudent->classId && *lhs.scores.rbegin() > *rhs.scores.rbegin());
 			});
-		auto names = sortedTable | std::views::transform([](const auto& p) -> int { return dummyStrLenCalc(p.pStudent->name); });
-		int nameLongest = *std::max_element(names.begin(), names.end());
-		auto ids = sortedTable | std::views::transform([](const auto& p) -> int { return p.pStudent->id.size(); });
-		int idLongest = *std::max_element(ids.begin(), ids.end());
 
-		nameLongest = std::max(nameLongest, 4);
-		idLongest = std::max(idLongest, 4);
-
-		const int idPos = 1 + nameLongest + 2;
-		int subjectPos = idPos + idLongest + 2;
-		auto& classes = ClassManager::getInstance().getClasses();
-		std::cout << "姓名" << con::cha(idPos) << "学号";
-
-		auto subjectIds = management.pExam->subjects;
-		for (auto& subject : subjectIds)
+		std::vector<Sheet> sheets;
+		sheets.push_back(Sheet("全部", 0, sortedTable.size()));
+		if (sortedTable.size() != 0)
+			sheets.push_back(Sheet(classes[sortedTable[0].pStudent->classId], 0, sortedTable.size()));
+		for (int i = 1; i < sortedTable.size(); i++)
 		{
-			std::cout << con::cha(subjectPos) << SubjectManager::getInstance().getSubjectName(subject) << ' ';
-			subjectPos += subjectWidth;
-		}
-		std::cout << std::endl;
-		
-		for (auto& pair : sortedTable)
-		{
-			std::cout << pair.pStudent->name << con::cha(idPos) << pair.pStudent->id;
-			subjectPos = idPos + idLongest + 2;
-			for (int i = 0; i < subjectIds.size(); i++)
+			if (sortedTable[i].pStudent->classId != sortedTable[i - 1].pStudent->classId)
 			{
-				auto score = i < pair.scores.size() ? pair.scores[i] : -1;
-				std::cout << con::cha(subjectPos);
-				if (score == -1.0f)
-					std::cout << "未参加";
-				else
-					std::cout << std::fixed << std::setprecision(2) << score;
-				subjectPos += subjectWidth;
-			}
-			std::cout << std::endl;
-		}
-
-		int subjectCnt = subjectIds.size();
-		std::vector<float> maxx(subjectCnt, std::numeric_limits<float>::min());
-		std::vector<float> minn(subjectCnt, std::numeric_limits<float>::max());
-		std::vector<float> avg(subjectCnt);
-		std::vector<int> validCount(subjectCnt);
-		for (auto& pair : sortedTable)
-		{
-			auto& scores = pair.scores;
-			int idx = 0;
-			for (int j = 0; j < scores.size(); j++)
-			{
-				auto score = scores[j];
-				if (score == -1.0f)
-				{
-					idx++;
-					continue;
-				}
-				maxx[idx] = std::max(maxx[idx], score);
-				minn[idx] = std::min(minn[idx], score);
-				avg[idx] += score;
-				validCount[idx]++;
-				idx++;
+				sheets.back().end = i;
+				sheets.push_back(Sheet(classes[sortedTable[i].pStudent->classId], i, sortedTable.size()));
 			}
 		}
 
-		auto printLine = [&](const std::string& name, const std::vector<int>& counts, const std::vector<float>& scores) -> void
+		// 计算列宽
+		int nameWidth = 4, idWidth = 4, classWidth = 4;
+		for (auto& pair : sortedTable)
+		{
+			nameWidth = std::max(nameWidth, dummyStrLenCalc(pair.pStudent->name));
+			idWidth = std::max(idWidth, dummyStrLenCalc(pair.pStudent->id));
+			classWidth = std::max(classWidth, dummyStrLenCalc(classes[pair.pStudent->classId]));
+		}
+
+		const int idPos = 1 + nameWidth + 2;
+		const int classPos = idPos + idWidth + 2;
+		const int subjectPos = classPos + classWidth + 2;
+
+		auto printLine = [&](const std::string& name, const std::string& id, const std::string& className, const std::vector<float>& scores, const std::string& invalidReplace) -> void
 			{
-				int subjectPos = idPos + idLongest + 2;
-				std::cout << name;
-				for (int i = 0; i < subjectCnt; i++)
+				std::cout << name << ' ' << con::cha(idPos) << id << ' ' << con::cha(classPos) << className << ' ';
+				auto pos = subjectPos;
+				for (int i = 0; i < scores.size(); i++)
 				{
-					std::cout << con::cha(subjectPos);
-					if (counts[i] == 0)
-						std::cout << "无效";
+					std::cout << con::cha(pos);
+					if (scores[i] == -1.0f)
+						std::cout << invalidReplace;
 					else
 						std::cout << std::fixed << std::setprecision(2) << scores[i];
-					subjectPos += subjectWidth;
+					pos += subjectWidth;
 				}
 				std::cout << std::endl;
 			};
 
-		con::fillCharToEnd('-');
-		for (int i = 0; i < subjectCnt; i++)
-			avg[i] /= validCount[i];
-		printLine("平均分", validCount, avg);
-		printLine("最高分", validCount, maxx);
-		printLine("最低分", validCount, minn);
+		int selectedSheet = 0;
+		while (true)
+		{
+			clearConsole();
+			std::cout << "考试名称：" << management.pExam->title << "    ID：" << management.pExam->id << std::endl;
+			con::fillCharToEnd('=');
 
-		waitEnterPressed();
+			for (int i = 0; i < sheets.size(); i++)
+				std::cout << (i == selectedSheet ? con::textGreen : con::nop) << sheets[i].title << con::textColorDefault << ' ';
+			std::cout << std::endl;
+			con::fillCharToEnd('-');
+
+			// 打印表头
+			{
+				std::cout << con::textBold << "姓名" << con::cha(idPos) << "学号" << con::cha(classPos) << "班级";
+				auto pos = subjectPos;
+				for (auto subject : subjectIds)
+				{
+					std::cout << con::cha(pos) << SubjectManager::getInstance().getSubjectName(subject) << ' ';
+					pos += subjectWidth;
+				}
+				std::cout << con::cha(pos) << "总分" << con::textColorDefault << std::endl;
+			}
+
+			auto subTable = std::ranges::subrange(sortedTable.cbegin() + sheets[selectedSheet].start, sortedTable.cbegin() + sheets[selectedSheet].end);
+
+			for (auto& record : subTable)
+				printLine(record.pStudent->name, record.pStudent->id, classes[record.pStudent->classId], record.scores, "未参加");
+
+			// 统计信息
+			int subjectCnt = subjectIds.size() + 1;
+			std::vector<float> maxx(subjectCnt, std::numeric_limits<float>::min());
+			std::vector<float> minn(subjectCnt, std::numeric_limits<float>::max());
+			std::vector<float> avg(subjectCnt);
+			std::vector<int> validCount(subjectCnt);
+			for (auto& pair : subTable)
+			{
+				auto& scores = pair.scores;
+				for (int j = 0; j < subjectCnt; j++)
+				{
+					auto score = scores[j];
+					if (score == -1.0f)
+						continue;
+					maxx[j] = std::max(maxx[j], score);
+					minn[j] = std::min(minn[j], score);
+					avg[j] += score;
+					validCount[j]++;
+				}
+			}
+			for (int i = 0; i < subjectCnt; i++)
+			{
+				if (validCount[i] == 0)
+					maxx[i] = minn[i] = avg[i] = -1.0f;
+			}
+
+			con::fillCharToEnd('-');
+			for (int i = 0; i < subjectCnt; i++)
+				avg[i] /= validCount[i];
+			printLine("平均分", "", "", avg, "无效");
+			printLine("最高分", "", "", maxx, "无效");
+			printLine("最低分", "", "", minn, "无效");
+			std::cout << "[按回车键返回，← → 方向键切换班级]" << std::endl;
+
+			// read input
+			while (true)
+			{
+				auto key = _getch();
+				if (key == 13)
+					return;
+				if (key == 224)
+				{
+					key = _getch();
+					if (key == 75)
+					{
+						selectedSheet = (selectedSheet - 1 + sheets.size()) % sheets.size();
+						break;
+					}
+					if (key == 77)
+					{
+						selectedSheet = (selectedSheet + 1) % sheets.size();
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	ExamScoreAddBatchCommand::ExamScoreAddBatchCommand(ExistingExamManagementCommand& management)

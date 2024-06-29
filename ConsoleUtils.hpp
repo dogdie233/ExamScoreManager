@@ -39,6 +39,8 @@ namespace con
 
 	void fillCharToEnd(char c);
 
+	std::ostream& nop(std::ostream& _Ostr);
+
 	std::ostream& lineClear(std::ostream& _Ostr);
 
 	std::ostream& textGreen(std::ostream& _Ostr);
